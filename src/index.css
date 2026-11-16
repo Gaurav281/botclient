@@ -1,0 +1,146 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, sans-serif;
+  color-scheme: light dark;
+}
+
+/* Telegram Mini App Viewport and safe areas */
+html, body, #root {
+  min-height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  touch-action: manipulation;
+  overscroll-behavior: none;
+}
+
+/* Dark Mode Background with crisp dotted grid */
+.app-dotted-bg,
+html.dark, html.dark body {
+  background-color: #070709;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1.2px, transparent 1.2px);
+  background-size: 20px 20px;
+  background-attachment: fixed;
+  color: #ffffff;
+}
+
+/* Light Mode Background with subtle black dotted grid */
+html:not(.dark) .app-dotted-bg,
+html:not(.dark), html:not(.dark) body {
+  background-color: #f4f5f8;
+  background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1.2px, transparent 1.2px);
+  background-size: 20px 20px;
+  background-attachment: fixed;
+  color: #111827;
+}
+
+/* Prevent body scrolling when in-game */
+body.in-game-lock {
+  overflow: hidden !important;
+  position: fixed !important;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* Glass Card - Adaptive Dark and Light */
+.dark .glass-card {
+  background: rgba(18, 18, 22, 0.85);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+}
+
+html:not(.dark) .glass-card {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 2px 8px -2px rgba(0, 0, 0, 0.04);
+}
+
+/* Total Balance Card (Special: Always Dark Obsidian in BOTH Light & Dark modes) */
+.wallet-card-permanent-dark {
+  background: linear-gradient(180deg, #181820 0%, #0f0f14 100%) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #ffffff !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Elevated Glass Cards */
+.dark .glass-card-elevated {
+  background: linear-gradient(180deg, rgba(28, 28, 36, 0.9) 0%, rgba(18, 18, 22, 0.95) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+html:not(.dark) .glass-card-elevated {
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.06);
+}
+
+/* Premium Primary Button (Pure White in Dark, Pure Black in Light) */
+.dark .btn-primary-white {
+  background-color: #ffffff;
+  color: #000000;
+  font-weight: 800;
+  transition: all 0.15s ease-in-out;
+}
+.dark .btn-primary-white:active {
+  transform: scale(0.97);
+  background-color: #e5e5e5;
+}
+
+html:not(.dark) .btn-primary-white {
+  background-color: #000000;
+  color: #ffffff;
+  font-weight: 800;
+  transition: all 0.15s ease-in-out;
+}
+html:not(.dark) .btn-primary-white:active {
+  transform: scale(0.97);
+  background-color: #1f2937;
+}
+
+/* Premium Secondary Button */
+.dark .btn-secondary-dark {
+  background-color: #1e1e24;
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 700;
+  transition: all 0.15s ease-in-out;
+}
+.dark .btn-secondary-dark:active {
+  transform: scale(0.97);
+  background-color: #282832;
+}
+
+html:not(.dark) .btn-secondary-dark {
+  background-color: #f3f4f6;
+  color: #111827;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  font-weight: 700;
+  transition: all 0.15s ease-in-out;
+}
+html:not(.dark) .btn-secondary-dark:active {
+  transform: scale(0.97);
+  background-color: #e5e7eb;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 5px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.3);
+  border-radius: 4px;
+}
+
+/* Disable tap highlight */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
