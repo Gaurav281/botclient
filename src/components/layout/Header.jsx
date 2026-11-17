@@ -1,7 +1,7 @@
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useGame } from '../../context/GameContext';
-import { Sun, Moon, ShieldCheck } from 'lucide-react';
+import { Sun, Moon, Sparkles, ShieldCheck } from 'lucide-react';
 import { triggerHaptic } from '../../services/telegram';
 
 export default function Header() {
@@ -99,7 +99,10 @@ export default function Header() {
           aria-label="Toggle theme"
           className="flex h-10 w-10 items-center justify-center rounded-full bg-neutral-200/80 dark:bg-white/10 border border-neutral-300 dark:border-white/10 transition-all active:scale-90 shadow-sm"
         >
-          {theme === 'dark' ? (
+          {theme === 'purple' ? (
+            // In Purple Mode: Show Sparkles icon (violet/purple)
+            <Sparkles className="w-5 h-5 text-purple-300 fill-purple-400/20" />
+          ) : theme === 'dark' ? (
             // In Dark Mode: Show Moon icon (white)
             <Moon className="w-5 h-5 text-white" />
           ) : (

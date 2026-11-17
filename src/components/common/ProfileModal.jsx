@@ -1,12 +1,12 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../../context/GameContext';
-import { X, Sun, Moon, Shield, Award, Calendar, CreditCard, ShieldCheck } from 'lucide-react';
+import { X, Sun, Moon, Sparkles, Shield, Award, Calendar, CreditCard, ShieldCheck } from 'lucide-react';
 import { formatISTDateTime, formatPoints } from '../../utils/formatters';
 
 export default function ProfileModal() {
   const navigate = useNavigate();
-  const { user, showProfileModal, setShowProfileModal, theme, toggleTheme, isAdmin } = useGame();
+  const { user, showProfileModal, setShowProfileModal, theme, setTheme, isAdmin } = useGame();
 
   if (!showProfileModal) return null;
 
@@ -81,15 +81,46 @@ export default function ProfileModal() {
             </span>
           </div>
 
-          <div className="flex items-center justify-between p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-white/5">
-            <span>Theme Mode</span>
-            <button
-              onClick={toggleTheme}
-              className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-900 dark:text-white font-bold"
-            >
-              {theme === 'dark' ? <Moon className="w-3.5 h-3.5 text-white" /> : <Sun className="w-3.5 h-3.5 text-black stroke-[2.2]" />}
-              <span className="capitalize text-xs">{theme}</span>
-            </button>
+          <div className="flex flex-col gap-2 p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-white/5">
+            <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">Theme</span>
+            <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-neutral-200/70 dark:bg-black/40">
+              <button
+                type="button"
+                onClick={() => setTheme('light')}
+                className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  theme === 'light'
+                    ? 'bg-white text-black shadow-sm'
+                    : 'text-neutral-500 dark:text-neutral-400 hover:text-neutral-900'
+                }`}
+              >
+                <Sun className="w-3.5 h-3.5 text-black stroke-[2.2]" />
+                <span>Light</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTheme('dark')}
+                className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  theme === 'dark'
+                    ? 'bg-neutral-800 text-white shadow-sm'
+                    : 'text-neutral-500 dark:text-neutral-400 hover:text-white'
+                }`}
+              >
+                <Moon className="w-3.5 h-3.5 text-white" />
+                <span>Dark</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTheme('purple')}
+                className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  theme === 'purple'
+                    ? 'bg-purple-600 text-white shadow-sm'
+                    : 'text-neutral-500 dark:text-neutral-400 hover:text-purple-300'
+                }`}
+              >
+                <Sparkles className="w-3.5 h-3.5 text-purple-200 fill-purple-300/30" />
+                <span>Purple</span>
+              </button>
+            </div>
           </div>
           {isAdmin && (
             <div className="flex items-center justify-between p-2.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500">

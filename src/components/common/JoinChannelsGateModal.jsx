@@ -16,6 +16,11 @@ export default function JoinChannelsGateModal() {
   const { user, setUser, showToast } = useGame();
   const [verifying, setVerifying] = useState(false);
 
+  // Synchronous local storage check to avoid even a 1-frame flash on game exit or page reload
+  const [isJoinedLocally, setIsJoinedLocally] = useState(() => {
+    return typeof window !== 'undefined' && localStorage.getItem('firefly_channels_joined') === 'true';
+  });
+
   // Track joined status of the 3 chats
   const [status, setStatus] = useState({
     channel: false,
@@ -23,9 +28,17 @@ export default function JoinChannelsGateModal() {
     payouts: false,
   });
 
+  // Keep localStorage in sync if user already marked joined
+  useEffect(() => {
+    if (user?.hasJoinedChannels) {
+      localStorage.setItem('firefly_channels_joined', 'true');
+      setIsJoinedLocally(true);
+    }
+  }, [user?.hasJoinedChannels]);
+
   // Query channel status on mount
   useEffect(() => {
-    if (!user || user.hasJoinedChannels) return;
+    if (!user || user.hasJoinedChannels || isJoinedLocally) return;
 
     let isMounted = true;
     api.getChannelsStatus().then((res) => {
@@ -36,16 +49,18 @@ export default function JoinChannelsGateModal() {
           payouts: !!res.payouts,
         });
         if (res.allJoined) {
+          localStorage.setItem('firefly_channels_joined', 'true');
+          setIsJoinedLocally(true);
           setUser({ ...user, hasJoinedChannels: true });
         }
       }
     }).catch(() => {});
 
     return () => { isMounted = false; };
-  }, [user]);
+  }, [user, isJoinedLocally]);
 
   // If user already joined or not loaded yet, don't show
-  if (!user || user.hasJoinedChannels) return null;
+  if (!user || user.hasJoinedChannels || isJoinedLocally) return null;
 
   const joinedCount = (status.channel ? 1 : 0) + (status.group ? 1 : 0) + (status.payouts ? 1 : 0);
   const progressPercent = Math.round((joinedCount / 3) * 100);
@@ -68,6 +83,8 @@ export default function JoinChannelsGateModal() {
 
       const res = await api.verifyChannels({ groupJoined: status.group });
       if (res.success && res.user) {
+        localStorage.setItem('firefly_channels_joined', 'true');
+        setIsJoinedLocally(true);
         setUser(res.user);
         sound.playPowerup();
         triggerHaptic('success');

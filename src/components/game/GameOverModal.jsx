@@ -98,17 +98,21 @@ export default function GameOverModal() {
 
         {/* Action Buttons */}
         <div className="space-y-2 mt-4">
-          <button
-            onClick={handlePlayAgain}
-            className="w-full btn-primary-white py-3 rounded-2xl text-xs flex items-center justify-center gap-2 font-bold shadow-lg"
-          >
-            <RotateCcw className="w-4 h-4" />
-            <span>Play Again</span>
-          </button>
+          {!activeTournament && (
+            <button
+              onClick={handlePlayAgain}
+              className="w-full btn-primary-white py-3 rounded-2xl text-xs flex items-center justify-center gap-2 font-bold shadow-lg"
+            >
+              <RotateCcw className="w-4 h-4" />
+              <span>Play Again</span>
+            </button>
+          )}
 
           <button
             onClick={handleGoHome}
-            className="w-full btn-secondary-dark py-3 rounded-2xl text-xs flex items-center justify-center gap-2"
+            className={`w-full py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 font-bold ${
+              activeTournament ? 'btn-primary-white shadow-lg' : 'btn-secondary-dark'
+            }`}
           >
             <Home className="w-4 h-4" />
             <span>{activeTournament ? 'Back to Tournaments' : 'Back to Arena'}</span>

@@ -30,18 +30,19 @@ export const GameProvider = ({ children }) => {
   const [lastGameResult, setLastGameResult] = useState(null);
   const [toast, setToast] = useState(null);
 
-  // Theme Management (Dark / Light Mode)
+  // Theme Management (Dark / Light / Purple Mode)
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('ast_theme') || 'dark';
   });
 
   useEffect(() => {
     const root = document.documentElement;
-    if (theme === 'dark') {
+    root.classList.remove('dark', 'light', 'purple');
+    if (theme === 'purple') {
+      root.classList.add('purple', 'dark');
+    } else if (theme === 'dark') {
       root.classList.add('dark');
-      root.classList.remove('light');
     } else {
-      root.classList.remove('dark');
       root.classList.add('light');
     }
     localStorage.setItem('ast_theme', theme);
@@ -49,7 +50,11 @@ export const GameProvider = ({ children }) => {
 
   const toggleTheme = useCallback(() => {
     triggerHaptic('light');
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    setTheme((prev) => {
+      if (prev === 'dark') return 'light';
+      if (prev === 'light') return 'purple';
+      return 'dark';
+    });
   }, []);
 
   const showToast = useCallback((message, type = 'info') => {
@@ -258,6 +263,7 @@ export const GameProvider = ({ children }) => {
         isAdmin,
         loading,
         theme,
+        setTheme,
         toggleTheme,
         activeTab,
         switchTab,
