@@ -5,7 +5,7 @@ import { triggerHaptic } from '../../services/telegram';
 import AdsterraMinimalAd from '../common/AdsterraMinimalAd';
 
 export default function GameOverModal() {
-  const { showGameOverModal, setShowGameOverModal, lastGameResult, user, launchGame, difficulty, switchTab } = useGame();
+  const { showGameOverModal, setShowGameOverModal, lastGameResult, user, launchGame, difficulty, switchTab, setIsPlaying } = useGame();
 
   if (!showGameOverModal) return null;
 
@@ -20,12 +20,16 @@ export default function GameOverModal() {
   const handlePlayAgain = () => {
     triggerHaptic('medium');
     setShowGameOverModal(false);
-    launchGame(difficulty);
+    setIsPlaying(false);
+    setTimeout(() => {
+      launchGame(difficulty);
+    }, 50);
   };
 
   const handleGoHome = () => {
     triggerHaptic('light');
     setShowGameOverModal(false);
+    setIsPlaying(false);
     switchTab('arena');
   };
 

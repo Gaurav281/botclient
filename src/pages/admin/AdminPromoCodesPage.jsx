@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import {
   useAdminPromoCodesQuery,
   useAdminCreatePromoMutation,
+  useAdminDeletePromoMutation,
 } from '../../hooks/queries';
 import { triggerHaptic } from '../../services/telegram';
-import { Plus, Ticket, Copy, Check, Users } from 'lucide-react';
+import { Plus, Ticket, Copy, Check, Users, Trash2 } from 'lucide-react';
 
 export default function AdminPromoCodesPage() {
   const [code, setCode] = useState('');
@@ -14,6 +15,7 @@ export default function AdminPromoCodesPage() {
 
   const { data, isLoading } = useAdminPromoCodesQuery();
   const createMutation = useAdminCreatePromoMutation();
+  const deleteMutation = useAdminDeletePromoMutation();
 
   const promoCodes = data?.promoCodes || [];
 
@@ -38,6 +40,13 @@ export default function AdminPromoCodesPage() {
     triggerHaptic('success');
     setCopiedCode(c);
     setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const handleDelete = (id, codeName) => {
+    if (window.confirm(`Are you sure you want to delete promo code "${codeName}" permanently?`)) {
+      triggerHaptic('warning');
+      deleteMutation.mutate(id);
+    }
   };
 
   return (
@@ -144,9 +153,19 @@ export default function AdminPromoCodesPage() {
                       </button>
                     </div>
 
-                    <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-green-500/20 text-green-400 border border-green-500/30">
-                      +{p.rewardPoints} PTS
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2 py-0.5 rounded-full text-xs font-mono font-bold bg-green-500/20 text-green-400 border border-green-500/30">
+                        +{p.rewardPoints} PTS
+                      </span>
+                      <button
+                        onClick={() => handleDelete(p._id, p.code)}
+                        disabled={deleteMutation.isPending}
+                        className="h-7 w-7 rounded-lg bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 flex items-center justify-center active:scale-95 transition-all"
+                        title="Delete promo code"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
                   </div>
 
                   <div>
@@ -163,9 +182,8 @@ export default function AdminPromoCodesPage() {
                     {/* Progress Bar */}
                     <div className="h-1.5 rounded-full bg-white/5 overflow-hidden">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          isFull ? 'bg-red-500' : 'bg-green-500'
-                        }`}
+                        className={`h-full rounded-full transition-all duration-500 ${isFull ? 'bg-red-500' : 'bg-green-500'
+                          }`}
                         style={{ width: `${pct}%` }}
                       />
                     </div>

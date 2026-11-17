@@ -201,6 +201,23 @@ export function useAdminCreatePromoMutation() {
   });
 }
 
+export function useAdminDeletePromoMutation() {
+  const queryClient = useQueryClient();
+  const showToast = useAuthStore((s) => s.showToast);
+
+  return useMutation({
+    mutationFn: (id) => api.deleteAdminPromoCode(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminPromoCodes });
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminOverview });
+      showToast(data.message || 'Promo code deleted permanently', 'success');
+    },
+    onError: (err) => {
+      showToast(err.message, 'error');
+    },
+  });
+}
+
 export function useAdminToggleCategoryMutation() {
   const queryClient = useQueryClient();
   const showToast = useAuthStore((s) => s.showToast);

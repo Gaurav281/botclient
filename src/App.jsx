@@ -3,6 +3,8 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useGame } from './context/GameContext';
 import PlayerLayout from './components/layout/PlayerLayout';
 import AsteroidBlasterCanvas from './components/game/AsteroidBlasterCanvas';
+import GameOverModal from './components/game/GameOverModal';
+import BossVictoryModal from './components/game/BossVictoryModal';
 import Toast from './components/common/Toast';
 
 // Code-splitting with React.lazy for high performance
@@ -51,6 +53,8 @@ export default function App() {
     return (
       <div className="fixed inset-0 bg-white dark:bg-[#070709] overflow-hidden select-none z-50">
         <AsteroidBlasterCanvas />
+        <GameOverModal />
+        <BossVictoryModal />
         <Toast />
       </div>
     );

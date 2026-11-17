@@ -60,7 +60,6 @@ export const useGameStore = create((set, get) => ({
   },
 
   handleGameEnd: async (resultData) => {
-    get().setIsPlaying(false);
     set({ lastGameResult: resultData });
 
     const difficulty = get().difficulty;

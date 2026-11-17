@@ -32,7 +32,7 @@ export default function HomeTab() {
   const [promoCode, setPromoCode] = useState('');
 
   // TanStack Query caching & background refetch
-  const { data: graphData } = useWeeklyGraphQuery();
+  const { data: graphData, refetch: refetchGraph } = useWeeklyGraphQuery();
   const { data: tasksData, refetch: refetchTasks } = useTasksQuery();
   const { data: tickerData } = useLiveTickerQuery();
   const redeemMutation = useRedeemPromoMutation();
@@ -60,16 +60,8 @@ export default function HomeTab() {
         sound.playPowerup();
         confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
         showToast(res.message, 'success');
-        setCheckInData((prev) => ({
-          ...prev,
-          canCheckIn: false,
-          streak: res.user.streak,
-          currentDay: ((res.user.streak - 1) % 7) + 1,
-        }));
-
-        api.getWeeklyGraph().then((g) => {
-          if (g.success) setWeeklyData(g);
-        });
+        refetchTasks();
+        refetchGraph();
       }
     } catch (err) {
       showToast(err.message, 'error');

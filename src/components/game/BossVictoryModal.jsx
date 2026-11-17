@@ -8,7 +8,7 @@ import { Award, Tv, Sparkles, CheckCircle2 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 export default function BossVictoryModal() {
-  const { showBossVictoryModal, setShowBossVictoryModal, setUser, showToast } = useGame();
+  const { showBossVictoryModal, setShowBossVictoryModal, setUser, showToast, setIsPlaying, switchTab } = useGame();
   const [claiming, setClaiming] = useState(false);
 
   if (!showBossVictoryModal) return null;
@@ -36,6 +36,8 @@ export default function BossVictoryModal() {
 
           showToast('🎉 Successfully claimed 200 Boss Coins!', 'success');
           setShowBossVictoryModal(false);
+          setIsPlaying(false);
+          switchTab('arena');
         }
       });
     } catch (err) {
@@ -83,6 +85,17 @@ export default function BossVictoryModal() {
         >
           <Tv className="w-4 h-4 text-inherit" />
           <span>{claiming ? 'Verifying Sponsor Ad...' : 'Watch Ad & Claim 200 Coins'}</span>
+        </button>
+
+        <button
+          onClick={() => {
+            setShowBossVictoryModal(false);
+            setIsPlaying(false);
+            switchTab('arena');
+          }}
+          className="w-full btn-secondary-dark py-2.5 rounded-2xl text-xs flex items-center justify-center gap-2 mt-2"
+        >
+          <span>Back to Arena</span>
         </button>
 
         <p className="mt-3 text-[10px] text-neutral-400 dark:text-neutral-500 font-mono">

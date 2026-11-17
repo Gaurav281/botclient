@@ -29,6 +29,7 @@ export default function TasksTab() {
     return sessionStorage.getItem('preferred_task_cat') || 'app_tasks';
   });
   const [activeTimers, setActiveTimers] = useState({});
+  const [localStarted, setLocalStarted] = useState({});
 
   const tasks = tasksData?.tasks || [];
   const enabledCategories = tasksData?.enabledCategories || {
@@ -64,9 +65,8 @@ export default function TasksTab() {
     try {
       const res = await api.startTask(task._id);
       if (res.success) {
-        setTasks((prev) =>
-          prev.map((t) => (t._id === task._id ? { ...t, status: 'started' } : t))
-        );
+        setLocalStarted((prev) => ({ ...prev, [task._id]: true }));
+        refetch();
 
         if (task.delaySeconds > 0) {
           setActiveTimers((prev) => ({ ...prev, [task._id]: task.delaySeconds }));
@@ -173,21 +173,19 @@ export default function TasksTab() {
                 triggerHaptic('selection');
                 setSelectedCategory(cat.id);
               }}
-              className={`relative flex flex-col items-center justify-center py-3 rounded-2xl border transition-all ${
-                isSelected
+              className={`relative flex flex-col items-center justify-center py-3 rounded-2xl border transition-all ${isSelected
                   ? 'bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-lg font-bold'
                   : 'bg-white dark:bg-[#141418] text-neutral-600 dark:text-neutral-400 border-neutral-200 dark:border-white/5 hover:text-black dark:hover:text-white'
-              }`}
+                }`}
             >
               <Icon className="w-4 h-4 mb-1" />
               <span className="text-[10px] font-semibold truncate px-1">{cat.label}</span>
               {remainingForCat > 0 && (
                 <span
-                  className={`absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full text-[9px] font-black ${
-                    isSelected
+                  className={`absolute -top-1 -right-1 flex h-4 min-w-4 px-1 items-center justify-center rounded-full text-[9px] font-black ${isSelected
                       ? 'bg-neutral-800 text-white dark:bg-black dark:text-white'
                       : 'bg-emerald-500 text-white'
-                  }`}
+                    }`}
                 >
                   {remainingForCat}
                 </span>
@@ -201,7 +199,7 @@ export default function TasksTab() {
       <div className="space-y-2.5">
         {filteredTasks.map((task) => {
           const isCompleted = task.status === 'completed';
-          const isStarted = task.status === 'started';
+          const isStarted = task.status === 'started' || Boolean(localStarted[task._id]);
           const timer = activeTimers[task._id];
           const isAppTask = task.actionType === 'app_task' || task.category === 'app_tasks';
 
@@ -268,7 +266,15 @@ export default function TasksTab() {
           );
         })}
 
-        {filteredTasks.length === 0 && !loading && (
+        {isLoading && (
+          <div className="space-y-2.5">
+            {[1, 2, 3].map((n) => (
+              <div key={n} className="h-16 rounded-2xl bg-neutral-200/50 dark:bg-white/5 animate-pulse" />
+            ))}
+          </div>
+        )}
+
+        {filteredTasks.length === 0 && !isLoading && (
           <div className="text-center py-8 text-xs text-neutral-400">
             No active tasks in this category right now.
           </div>

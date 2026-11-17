@@ -168,9 +168,8 @@ export const GameProvider = ({ children }) => {
     }
   }, [showToast]);
 
-  // Handle Game Finish
+  // Handle Game Finish (keep canvas mounted so result modal renders over game)
   const handleGameEnd = useCallback(async (resultData) => {
-    setIsPlaying(false);
     setLastGameResult(resultData);
 
     try {
