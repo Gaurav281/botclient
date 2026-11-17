@@ -17,11 +17,14 @@ import {
   Coins,
   ChevronDown,
   ChevronUp,
+  Rocket,
+  Car,
 } from 'lucide-react';
 import { formatPoints } from '../../utils/formatters';
 
 export default function AdminTournamentsPage() {
   const [title, setTitle] = useState('');
+  const [gameType, setGameType] = useState('asteroid_blaster'); // 'asteroid_blaster' | 'car_runner'
   const [entryFee, setEntryFee] = useState('200');
   const [prizePool, setPrizePool] = useState('1000');
   const [maxParticipants, setMaxParticipants] = useState('50');
@@ -90,6 +93,7 @@ export default function AdminTournamentsPage() {
 
     await createMutation.mutateAsync({
       title: title.trim(),
+      gameType,
       entryFee: parseInt(entryFee) || 0,
       prizePool: parseInt(prizePool) || 1000,
       maxParticipants: parseInt(maxParticipants) || 50,
@@ -150,6 +154,38 @@ export default function AdminTournamentsPage() {
               className="w-full rounded-2xl bg-black/40 border border-white/10 px-3.5 py-2.5 text-xs text-white placeholder-neutral-500 focus:outline-none focus:border-white/30"
               required
             />
+          </div>
+
+          {/* Game Selection */}
+          <div>
+            <label className="text-[11px] text-neutral-400 block mb-1">Select Tournament Game</label>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setGameType('asteroid_blaster')}
+                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl border text-xs font-bold transition-all ${
+                  gameType === 'asteroid_blaster'
+                    ? 'bg-white text-black border-white shadow-md'
+                    : 'bg-black/40 text-neutral-400 border-white/10 hover:text-white'
+                }`}
+              >
+                <Rocket className="w-4 h-4" />
+                <span>Asteroid Blaster</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setGameType('car_runner')}
+                className={`flex items-center justify-center gap-2 py-2.5 px-3 rounded-2xl border text-xs font-bold transition-all ${
+                  gameType === 'car_runner'
+                    ? 'bg-white text-black border-white shadow-md'
+                    : 'bg-black/40 text-neutral-400 border-white/10 hover:text-white'
+                }`}
+              >
+                <Car className="w-4 h-4" />
+                <span>Diamond Highway (Car)</span>
+              </button>
+            </div>
           </div>
 
           {/* Grid: Entry Fee, Prize Pool, Total Participants, Duration */}
@@ -324,6 +360,10 @@ export default function AdminTournamentsPage() {
                       }`}
                     >
                       {t.resultsDeclared ? 'Results Declared' : t.status}
+                    </span>
+                    <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase bg-white/10 text-neutral-300 border border-white/10 flex items-center gap-1">
+                      {t.gameType === 'car_runner' ? <Car className="w-2.5 h-2.5" /> : <Rocket className="w-2.5 h-2.5" />}
+                      <span>{t.gameType === 'car_runner' ? 'Diamond Car' : 'Asteroid Blaster'}</span>
                     </span>
                     <span className="text-[10px] text-neutral-400 font-mono">
                       Ends: {new Date(t.endDate).toLocaleString()}

@@ -16,6 +16,8 @@ import {
   Users,
   Play,
   Tv,
+  Car,
+  Rocket,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { formatPoints } from '../../utils/formatters';
@@ -278,7 +280,7 @@ export default function TasksTab() {
                 {/* Header */}
                 <div className="flex items-start justify-between gap-3 mb-3">
                   <div>
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-1.5 flex-wrap mb-1">
                       <span
                         className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-wider uppercase ${
                           !isEnded
@@ -287,6 +289,19 @@ export default function TasksTab() {
                         }`}
                       >
                         {!isEnded ? '● Live' : 'Completed'}
+                      </span>
+                      <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-wider uppercase bg-neutral-100 dark:bg-white/10 text-neutral-700 dark:text-neutral-300 border border-neutral-200 dark:border-white/10 flex items-center gap-1">
+                        {tourney.gameType === 'car_runner' ? (
+                          <>
+                            <Car className="w-3 h-3 text-cyan-500" />
+                            <span>Diamond Highway</span>
+                          </>
+                        ) : (
+                          <>
+                            <Rocket className="w-3 h-3 text-amber-500" />
+                            <span>Asteroid Blaster</span>
+                          </>
+                        )}
                       </span>
                       <span className="text-[11px] text-neutral-500 dark:text-neutral-400 font-mono flex items-center gap-1">
                         <Clock className="w-3 h-3" />

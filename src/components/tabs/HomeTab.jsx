@@ -18,6 +18,7 @@ import {
   Smartphone,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import CountUp from 'react-countup';
 import { formatINR, formatPoints } from '../../utils/formatters';
 import AddBioLinkModal from '../common/AddBioLinkModal';
 import {
@@ -180,21 +181,23 @@ export default function HomeTab() {
 
         {/* Big Balance Number */}
         <div className="flex items-baseline gap-2.5 my-2.5">
-          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-yellow-400">
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-white">
             <Coins className="w-5 h-5" />
           </div>
           <span className="text-4xl font-black tracking-tight text-white font-mono">
-            {formatPoints(coins)}
+            <CountUp end={coins} duration={1.2} separator="," preserveValue />
           </span>
           <span className="text-sm font-bold text-neutral-400 font-mono">PTS</span>
         </div>
 
         {/* Value Line */}
         <div className="flex items-center gap-2 text-xs text-neutral-300 mb-4 font-medium">
-          <span>≈ {formatINR(inrValue)}</span>
+          <span>
+            ≈ <CountUp end={inrValue} decimals={2} duration={1.2} prefix="₹" preserveValue />
+          </span>
           <span>•</span>
           <span className="text-white font-semibold">
-            {formatINR(withdrawableInr)} ready to withdraw
+            <CountUp end={withdrawableInr} decimals={2} duration={1.2} prefix="₹" preserveValue /> ready to withdraw
           </span>
         </div>
 
@@ -249,9 +252,10 @@ export default function HomeTab() {
         <div className="flex items-center justify-between mb-3">
           <div>
             <h3 className="text-base font-black text-neutral-900 dark:text-white">Daily check-in</h3>
-            <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
-              {currentStreak}-day streak
-            </span>
+            <div className="flex items-center gap-1.5 text-xs text-neutral-500 dark:text-neutral-400 font-medium">
+              <Flame className="w-4 h-4 text-orange-500 fill-orange-500" />
+              <span>{currentStreak}-day streak</span>
+            </div>
           </div>
 
           <button
@@ -398,22 +402,7 @@ export default function HomeTab() {
         </button>
       </div>
 
-      {/* 5. REAL LIVE ACTIVITY TICKER (Matching Reference Image 2) */}
-      <div className="flex items-center gap-2 rounded-2xl glass-card px-4 py-3 overflow-hidden transition-colors">
-        <span className="flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping shrink-0" />
-        <span className="text-[10px] font-mono text-emerald-600 dark:text-emerald-400 font-black uppercase shrink-0">LIVE</span>
-        <div className="text-xs text-neutral-700 dark:text-neutral-300 truncate font-medium">
-          {liveTicker.length > 0 ? (
-            <span>
-              {liveTicker[0].name} won <span className="font-black text-neutral-900 dark:text-white">+{liveTicker[0].amount} PTS</span> in Asteroid Blaster
-            </span>
-          ) : (
-            <span>Blast asteroids and defeat the Mothership boss to earn rewards!</span>
-          )}
-        </div>
-      </div>
-
-      {/* 6. OPEN TASKS HEADER & PREVIEW (Matching Reference Image 2) */}
+      {/* 5. OPEN TASKS HEADER & PREVIEW (Matching Reference Image 2) */}
       <div className="space-y-3 pt-1">
         <div className="flex items-center justify-between px-1">
           <div className="flex items-center gap-2">

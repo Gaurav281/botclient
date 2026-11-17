@@ -28,6 +28,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import CountUp from 'react-countup';
 import { formatINR, formatPoints, formatISTTime, formatISTDateTime } from '../../utils/formatters';
 
 export default function WalletTab() {
@@ -148,7 +149,7 @@ export default function WalletTab() {
 
         <div className="flex items-baseline gap-2 mb-1">
           <span className="text-3xl font-black text-neutral-900 dark:text-white font-mono tracking-tight">
-            {formatINR(totalInr)}
+            <CountUp end={totalInr} decimals={2} duration={1.2} prefix="₹" preserveValue />
           </span>
         </div>
 
@@ -164,7 +165,7 @@ export default function WalletTab() {
             </span>
             <div className="flex items-center gap-1.5">
               <span className="text-base font-bold text-neutral-900 dark:text-white font-mono">
-                {formatPoints(coins)}
+                <CountUp end={coins} duration={1.2} separator="," preserveValue />
               </span>
               <span className="text-[10px] text-neutral-400">PTS</span>
             </div>

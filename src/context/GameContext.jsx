@@ -21,6 +21,7 @@ export const GameProvider = ({ children }) => {
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'tasks', 'arena', 'refer', 'wallet'
   const [isPlaying, setIsPlaying] = useState(false);
   const [difficulty, setDifficulty] = useState('normal'); // 'easy', 'normal', 'hard'
+  const [activeGameType, setActiveGameType] = useState('asteroid_blaster'); // 'asteroid_blaster' | 'car_runner'
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [showBossVictoryModal, setShowBossVictoryModal] = useState(false);
@@ -50,19 +51,20 @@ export const GameProvider = ({ children }) => {
     return unsub;
   }, []);
 
-  // Theme Management (Dark / Light / Purple Mode)
+  // Theme Management (Dark / Light Mode)
   const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('ast_theme') || 'dark';
+    const saved = localStorage.getItem('ast_theme');
+    return saved === 'light' ? 'light' : 'dark';
   });
 
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove('dark', 'light', 'purple');
-    if (theme === 'purple') {
-      root.classList.add('purple', 'dark');
-    } else if (theme === 'dark') {
+    root.classList.remove('purple');
+    if (theme === 'dark') {
       root.classList.add('dark');
+      root.classList.remove('light');
     } else {
+      root.classList.remove('dark');
       root.classList.add('light');
     }
     localStorage.setItem('ast_theme', theme);
@@ -70,11 +72,7 @@ export const GameProvider = ({ children }) => {
 
   const toggleTheme = useCallback(() => {
     triggerHaptic('light');
-    setTheme((prev) => {
-      if (prev === 'dark') return 'light';
-      if (prev === 'light') return 'purple';
-      return 'dark';
-    });
+    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
   }, []);
 
   const showToast = useCallback((message, type = 'info') => {
@@ -164,47 +162,61 @@ export const GameProvider = ({ children }) => {
     }
   }, []);
 
-  // Launch Asteroid Blaster Game Flow (Unlimited Plays)
-  const launchGame = useCallback((chosenDifficulty = 'normal') => {
+  // Launch Game Flow (Asteroid Blaster or Car Runner)
+  const launchGame = useCallback((chosenDifficulty = 'normal', gameType = 'asteroid_blaster') => {
     if (!user) return;
 
-    // Check boss pending lock
-    if (user.bossKillPendingClaim) {
+    // Check boss pending lock (only blocks Asteroid Blaster)
+    if (gameType === 'asteroid_blaster' && user.bossKillPendingClaim) {
       showToast('Watch ad to claim your 200 Boss Coins before starting next game!', 'warning');
       setShowBossVictoryModal(true);
       return;
     }
 
+    // Check 50-match limit
+    const matchesRemaining = user.gameEnergy?.matchesRemaining ?? 50;
+    if (matchesRemaining <= 0) {
+      showToast('Match limit reached (50/50)! Limit resets in 12 hours.', 'warning');
+      return;
+    }
+
+    setActiveGameType(gameType);
     setDifficulty(chosenDifficulty);
     setActiveTournament(null);
 
     // Check if user chose "Do not show rules again"
-    if (!user.doNotShowRules) {
+    if (!user.doNotShowRules && gameType === 'asteroid_blaster') {
       setShowRulesModal(true);
     } else {
-      setIsPlaying(true);
+      confirmStartGame(gameType);
     }
   }, [user, showToast]);
 
   // Launch Tournament Match specifically
   const launchTournamentMatch = useCallback((tournament) => {
     if (!user) return;
+    const targetGame = tournament.gameType || 'asteroid_blaster';
     setActiveTournament(tournament);
+    setActiveGameType(targetGame);
     setDifficulty('normal');
-    setIsPlaying(true);
+    confirmStartGame(targetGame);
   }, [user]);
 
-  const confirmStartGame = useCallback(async () => {
+  const confirmStartGame = useCallback(async (forcedGameType) => {
     try {
       setShowRulesModal(false);
-      const res = await api.startGame();
+      const targetGame = forcedGameType || activeGameType;
+      const res = await api.startGame({ gameType: targetGame });
       if (res.success) {
+        if (res.user) {
+          setUser(res.user);
+        }
         setIsPlaying(true);
       }
     } catch (err) {
-      showToast(err.message, 'error');
+      showToast(err.message || 'Error starting match', 'error');
     }
-  }, [showToast]);
+  }, [activeGameType, setUser, showToast]);
 
   // Handle Game Finish (keep canvas mounted so result modal renders over game)
   const handleGameEnd = useCallback(async (resultData) => {
@@ -225,10 +237,11 @@ export const GameProvider = ({ children }) => {
 
       const res = await api.finishGame({
         score: resultData.score,
-        enemiesKilled: resultData.kills,
-        bossKilled: resultData.bossKilled,
+        enemiesKilled: resultData.kills || 0,
+        bossKilled: resultData.bossKilled || false,
         difficulty,
         isTournament: Boolean(activeTournament),
+        gameType: activeGameType,
       });
 
       if (res.success && res.user) {
@@ -246,7 +259,7 @@ export const GameProvider = ({ children }) => {
       showToast('Error saving score: ' + err.message, 'error');
       setShowGameOverModal(true);
     }
-  }, [activeTournament, difficulty, showToast]);
+  }, [activeTournament, activeGameType, difficulty, setUser, showToast]);
 
   const navigate = useNavigate();
   const switchTab = useCallback((tab) => {
@@ -303,6 +316,8 @@ export const GameProvider = ({ children }) => {
         setShowAdminModal,
         activeTournament,
         setActiveTournament,
+        activeGameType,
+        setActiveGameType,
         launchTournamentMatch,
         lastGameResult,
         launchGame,

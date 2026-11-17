@@ -1,7 +1,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../../context/GameContext';
-import { X, Sun, Moon, Sparkles, Shield, Award, Calendar, CreditCard, ShieldCheck } from 'lucide-react';
+import { X, Sun, Moon, Shield, Award, Calendar, CreditCard, ShieldCheck } from 'lucide-react';
 import { formatISTDateTime, formatPoints } from '../../utils/formatters';
 
 export default function ProfileModal() {
@@ -83,7 +83,7 @@ export default function ProfileModal() {
 
           <div className="flex flex-col gap-2 p-2.5 rounded-xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200 dark:border-white/5">
             <span className="text-[11px] font-semibold text-neutral-500 dark:text-neutral-400">Theme</span>
-            <div className="grid grid-cols-3 gap-1.5 p-1 rounded-xl bg-neutral-200/70 dark:bg-black/40">
+            <div className="grid grid-cols-2 gap-1.5 p-1 rounded-xl bg-neutral-200/70 dark:bg-black/40">
               <button
                 type="button"
                 onClick={() => setTheme('light')}
@@ -107,18 +107,6 @@ export default function ProfileModal() {
               >
                 <Moon className="w-3.5 h-3.5 text-white" />
                 <span>Dark</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setTheme('purple')}
-                className={`flex items-center justify-center gap-1.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
-                  theme === 'purple'
-                    ? 'bg-purple-600 text-white shadow-sm'
-                    : 'text-neutral-500 dark:text-neutral-400 hover:text-purple-300'
-                }`}
-              >
-                <Sparkles className="w-3.5 h-3.5 text-purple-200 fill-purple-300/30" />
-                <span>Purple</span>
               </button>
             </div>
           </div>

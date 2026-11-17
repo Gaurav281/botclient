@@ -16,6 +16,7 @@ export default function GameOverModal() {
     setIsPlaying,
     activeTournament,
     setActiveTournament,
+    activeGameType,
   } = useGame();
 
   if (!showGameOverModal) return null;
@@ -37,7 +38,7 @@ export default function GameOverModal() {
       switchTab('tasks');
     } else {
       setTimeout(() => {
-        launchGame(difficulty);
+        launchGame(difficulty, activeGameType);
       }, 50);
     }
   };
@@ -63,10 +64,18 @@ export default function GameOverModal() {
         </div>
 
         <h3 className="text-xl font-black tracking-tight text-neutral-900 dark:text-white">
-          {activeTournament ? 'Tournament Match Complete' : 'Mission Debrief'}
+          {activeTournament
+            ? 'Tournament Match Complete'
+            : activeGameType === 'car_runner'
+            ? 'Diamond Highway Complete'
+            : 'Mission Debrief'}
         </h3>
         <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 font-medium">
-          {activeTournament ? `${activeTournament.title} • Score Submitted!` : 'Your Asteroid Blaster battle results'}
+          {activeTournament
+            ? `${activeTournament.title} • Score Submitted!`
+            : activeGameType === 'car_runner'
+            ? 'Great driving! Diamonds and score recorded.'
+            : 'Your Asteroid Blaster battle results'}
         </p>
 
         {/* Stats Grid */}
@@ -77,8 +86,14 @@ export default function GameOverModal() {
           </div>
 
           <div className="rounded-2xl bg-neutral-100 dark:bg-neutral-900/90 p-3 border border-neutral-200 dark:border-white/5">
-            <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block mb-1">Kills</span>
-            <span className="text-base font-black text-rose-500 dark:text-rose-400 font-mono">{kills}</span>
+            <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block mb-1">
+              {activeGameType === 'car_runner' ? 'Diamonds' : 'Kills'}
+            </span>
+            <span className={`text-base font-black font-mono ${
+              activeGameType === 'car_runner' ? 'text-cyan-500 dark:text-cyan-400' : 'text-rose-500 dark:text-rose-400'
+            }`}>
+              {kills}
+            </span>
           </div>
 
           <div className="rounded-2xl bg-neutral-100 dark:bg-neutral-900/90 p-3 border border-neutral-200 dark:border-white/5">

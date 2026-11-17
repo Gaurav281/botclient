@@ -37,7 +37,7 @@ export const api = {
   verifyChannels: (payload = {}) => request('/auth/verify-channels', { method: 'POST', body: JSON.stringify(payload) }),
 
   // Game
-  startGame: () => request('/game/start', { method: 'POST' }),
+  startGame: (payload = {}) => request('/game/start', { method: 'POST', body: JSON.stringify(payload) }),
   finishGame: (data) => request('/game/finish', { method: 'POST', body: JSON.stringify(data) }),
   claimBossReward: () => request('/game/claim-boss-reward', { method: 'POST' }),
   getLiveTicker: () => request('/game/live-ticker'),
