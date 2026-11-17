@@ -33,6 +33,7 @@ export const api = {
   loginTelegram: (payload) => request('/auth/telegram', { method: 'POST', body: JSON.stringify(payload) }),
   getMe: () => request('/auth/me'),
   updatePreferences: (prefs) => request('/auth/preferences', { method: 'PATCH', body: JSON.stringify(prefs) }),
+  verifyChannels: () => request('/auth/verify-channels', { method: 'POST' }),
 
   // Game
   startGame: () => request('/game/start', { method: 'POST' }),

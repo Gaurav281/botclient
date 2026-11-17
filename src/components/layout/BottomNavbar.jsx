@@ -46,16 +46,16 @@ export default function BottomNavbar() {
                 <div
                   className={`flex h-8 px-4 items-center justify-center rounded-full transition-all duration-200 ${
                     isActive
-                      ? 'bg-black text-white dark:bg-white dark:text-black shadow-md'
-                      : 'bg-neutral-100 text-neutral-800 dark:bg-[#1b1b22] dark:text-white hover:bg-neutral-200 dark:hover:bg-[#262630] border border-neutral-200 dark:border-white/10'
+                      ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 text-black shadow-lg shadow-orange-500/30 scale-105 animate-firefly-glow'
+                      : 'bg-neutral-100 text-neutral-800 dark:bg-[#1b1b22] dark:text-white hover:bg-neutral-200 dark:hover:bg-[#262630] border border-neutral-200 dark:border-white/10 hover:scale-105'
                   }`}
                 >
-                  <Icon className="w-4 h-4 mr-1.5" />
+                  <Icon className="w-4 h-4 mr-1.5 animate-wiggle-hover" />
                   <span className="text-xs font-black font-mono">Play</span>
                 </div>
                 <span
                   className={`text-[10px] mt-1 font-semibold transition-colors ${
-                    isActive ? 'text-black dark:text-white font-black' : 'text-neutral-500 dark:text-neutral-400'
+                    isActive ? 'text-amber-500 font-black' : 'text-neutral-500 dark:text-neutral-400'
                   }`}
                 >
                   {item.label}
@@ -68,16 +68,18 @@ export default function BottomNavbar() {
             <button
               key={item.id}
               onClick={() => handleNav(item.path)}
-              className="relative flex flex-col items-center py-1 px-3 transition-colors active:scale-95"
+              className="relative flex flex-col items-center py-1 px-3 transition-all active:scale-90"
             >
               <div className="relative">
                 <Icon
-                  className={`w-5 h-5 transition-colors ${
-                    isActive ? 'text-black dark:text-white' : 'text-neutral-400 dark:text-neutral-500 hover:text-black dark:hover:text-neutral-300'
+                  className={`w-5 h-5 transition-all duration-200 ${
+                    isActive
+                      ? 'text-black dark:text-white scale-110 -translate-y-0.5 drop-shadow-[0_2px_8px_rgba(255,255,255,0.3)]'
+                      : 'text-neutral-400 dark:text-neutral-500 hover:text-black dark:hover:text-neutral-300 hover:scale-110'
                   }`}
                 />
                 {item.badge && !isActive && (
-                  <span className="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-black text-white dark:bg-white dark:text-black text-[9px] font-black px-1 shadow-sm">
+                  <span className="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 text-black text-[9px] font-black px-1 shadow-sm animate-pulse">
                     {item.badge}
                   </span>
                 )}

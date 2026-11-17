@@ -103,13 +103,13 @@ export default function AsteroidBlasterCanvas() {
       bossTimer: 60, // 60s as in reference image
       boss: null,
 
-      // Player Craft
+      // Player Craft (strictly anchored at bottom 55px, drag left and right)
       player: {
-        x: canvas.width / 2,
-        y: canvas.height - 55,
+        x: (canvas.width || 360) / 2,
+        y: (canvas.height || 640) - 55,
         radius: 16,
-        targetX: canvas.width / 2,
-        targetY: canvas.height - 55,
+        targetX: (canvas.width || 360) / 2,
+        targetY: (canvas.height || 640) - 55,
         invulnerableTimer: 0,
       },
 
@@ -127,16 +127,19 @@ export default function AsteroidBlasterCanvas() {
       lastPlayerShot: 0,
       playerFireRate: 180,
       spawnEnemyTimer: 0,
+      lastPowerupTime: 0,
     };
 
-    // Stars
-    for (let i = 0; i < 65; i++) {
+    // Stars & Glowing Firefly Space Dust
+    for (let i = 0; i < 75; i++) {
+      const isFirefly = Math.random() < 0.16;
       state.stars.push({
         x: Math.random() * (canvas.width || 360),
         y: Math.random() * (canvas.height || 600),
-        size: Math.random() * 1.8 + 0.6,
-        speed: Math.random() * 0.7 + 0.3,
+        size: isFirefly ? Math.random() * 2 + 1.2 : Math.random() * 1.5 + 0.5,
+        speed: isFirefly ? Math.random() * 0.5 + 0.2 : Math.random() * 0.8 + 0.3,
         alpha: Math.random() * 0.7 + 0.3,
+        isFirefly,
       });
     }
 
@@ -155,7 +158,11 @@ export default function AsteroidBlasterCanvas() {
       state.width = rect.width;
       state.height = rect.height;
 
-      state.player.y = Math.max(state.height * 0.9, Math.min(state.player.y, state.height - 45));
+      const bottomY = rect.height - 55;
+      state.player.x = rect.width / 2;
+      state.player.targetX = rect.width / 2;
+      state.player.y = bottomY;
+      state.player.targetY = bottomY;
     };
 
     handleResize();
@@ -166,24 +173,19 @@ export default function AsteroidBlasterCanvas() {
     };
   }, [difficulty]);
 
-  // Touch and Mouse Controls (Constrained to 10% upwards limit)
+  // Touch and Mouse Controls: strictly horizontal movement (Drag Left & Right)
   const handlePointerMove = useCallback((e) => {
     const state = gameStateRef.current;
     if (!state || state.gameOver) return;
 
-    const rect = canvasRef.current.getBoundingClientRect();
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
     const x = clientX - rect.left;
-    const y = clientY - rect.top;
 
-    state.player.targetX = Math.max(18, Math.min(x, state.width - 18));
-
-    // STRICT USER CONSTRAINT: movement is limited strictly to bottom 10%
-    const maxUpY = state.height * 0.90;
-    const bottomY = state.height - 35;
-    state.player.targetY = Math.max(maxUpY, Math.min(y, bottomY));
+    state.player.targetX = Math.max(22, Math.min(x, state.width - 22));
+    state.player.targetY = state.height - 55;
   }, []);
 
   // Main Canvas Render & Physics Loop
@@ -213,19 +215,10 @@ export default function AsteroidBlasterCanvas() {
         }
       }
 
-      // If in countdown, only render background, player, and stars
+      // If in countdown, only render cosmic background, player, and stars
       if (isCountingDown) {
         ctx.clearRect(0, 0, width, height);
-        ctx.fillStyle = '#050508';
-        ctx.fillRect(0, 0, width, height);
-
-        for (const s of state.stars) {
-          ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
-          ctx.beginPath();
-          ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
+        renderCosmicBackground(ctx, state, width, height, currentTime);
         drawPlayerCraft(ctx, state);
         return;
       }
@@ -361,33 +354,66 @@ export default function AsteroidBlasterCanvas() {
       // Spawn Enemy Squadrons (ONLY ACTIVE WHEN BOSS IS NOT ACTIVE)
       if (!state.bossActive) {
         state.spawnEnemyTimer += dt;
-        // Higher enemy density (interval 0.72s)
-        const enemySpawnInterval = 0.72;
-        if (state.spawnEnemyTimer > enemySpawnInterval) {
-          state.spawnEnemyTimer = 0;
 
-          // 3 Types of enemies yielding +10, +20, and +30 PTS
-          const types = [
+        // Structured enemy pacing: keep 2 to 4 enemies on screen at all times!
+        // 1. If screen is empty, immediately spawn 2 enemies in formation
+        if (state.enemies.length === 0) {
+          const eTypes = [
             { type: 'scout', hp: 1, speed: 90, scoreValue: 10, color: '#f43f5e' },
-            { type: 'scout', hp: 1, speed: 95, scoreValue: 10, color: '#f43f5e' },
             { type: 'interceptor', hp: 2, speed: 75, scoreValue: 20, color: '#fb7185' },
-            { type: 'interceptor', hp: 2, speed: 80, scoreValue: 20, color: '#fb7185' },
-            { type: 'heavy', hp: 3, speed: 55, scoreValue: 30, color: '#e11d48' },
           ];
-          const chosen = types[Math.floor(Math.random() * types.length)];
-
           state.enemies.push({
-            x: Math.random() * (width - 50) + 25,
-            y: -30,
-            type: chosen.type,
-            hp: chosen.hp,
-            maxHp: chosen.hp,
-            speed: chosen.speed,
-            scoreValue: chosen.scoreValue,
-            color: chosen.color,
-            shootCooldown: Math.random() * 1.3 + 0.6,
-            wobbleOffset: Math.random() * 10,
+            x: width * 0.3,
+            y: -25,
+            type: eTypes[0].type,
+            hp: eTypes[0].hp,
+            maxHp: eTypes[0].hp,
+            speed: eTypes[0].speed,
+            scoreValue: eTypes[0].scoreValue,
+            color: eTypes[0].color,
+            shootCooldown: 1.2,
+            wobbleOffset: 0,
           });
+          state.enemies.push({
+            x: width * 0.7,
+            y: -35,
+            type: eTypes[1].type,
+            hp: eTypes[1].hp,
+            maxHp: eTypes[1].hp,
+            speed: eTypes[1].speed,
+            scoreValue: eTypes[1].scoreValue,
+            color: eTypes[1].color,
+            shootCooldown: 1.6,
+            wobbleOffset: Math.PI,
+          });
+          state.spawnEnemyTimer = 0;
+        } else if (state.enemies.length < 4) {
+          // Dynamic interval: if only 1 enemy on screen, spawn in 1.1s; if 2-3 enemies, spawn at 1.8s
+          const targetInterval = state.enemies.length < 2 ? 1.1 : 1.8;
+          if (state.spawnEnemyTimer > targetInterval) {
+            state.spawnEnemyTimer = 0;
+
+            const types = [
+              { type: 'scout', hp: 1, speed: 90, scoreValue: 10, color: '#f43f5e' },
+              { type: 'scout', hp: 1, speed: 95, scoreValue: 10, color: '#f43f5e' },
+              { type: 'interceptor', hp: 2, speed: 75, scoreValue: 20, color: '#fb7185' },
+              { type: 'heavy', hp: 3, speed: 55, scoreValue: 30, color: '#e11d48' },
+            ];
+            const chosen = types[Math.floor(Math.random() * types.length)];
+
+            state.enemies.push({
+              x: Math.random() * (width - 60) + 30,
+              y: -30,
+              type: chosen.type,
+              hp: chosen.hp,
+              maxHp: chosen.hp,
+              speed: chosen.speed,
+              scoreValue: chosen.scoreValue,
+              color: chosen.color,
+              shootCooldown: Math.random() * 1.2 + 0.8,
+              wobbleOffset: Math.random() * 10,
+            });
+          }
         }
       }
 
@@ -465,7 +491,15 @@ export default function AsteroidBlasterCanvas() {
                 life: 0.8,
               });
 
-              if (Math.random() < 0.35) {
+              // Balanced upgrade pacing: not too many, not too few
+              const now = performance.now();
+              const timeSinceLastDrop = now - (state.lastPowerupTime || 0);
+              const shouldDrop =
+                state.powerups.length < 2 &&
+                (timeSinceLastDrop > 11000 || state.kills % 6 === 0 || (state.lives < state.maxLives && Math.random() < 0.35));
+
+              if (shouldDrop) {
+                state.lastPowerupTime = now;
                 spawnDrop(state, e.x, e.y);
               }
 
@@ -690,16 +724,8 @@ export default function AsteroidBlasterCanvas() {
       // --- 2. RENDER GRAPHICS ---
       ctx.clearRect(0, 0, width, height);
 
-      // Deep space starry background inside the game card
-      ctx.fillStyle = '#050508';
-      ctx.fillRect(0, 0, width, height);
-
-      for (const s of state.stars) {
-        ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      // Deep space starry background & cosmic nebula
+      renderCosmicBackground(ctx, state, width, height, currentTime);
 
       // Dashed boundary line (10% upwards limit)
       const limitY = state.height * 0.90;
@@ -859,17 +885,58 @@ export default function AsteroidBlasterCanvas() {
     state.floatTexts.push({ x: state.player.x, y: state.player.y - 25, text: 'Guns lost!', color: '#ef4444', life: 1.2 });
   }
 
+  function renderCosmicBackground(ctx, state, width, height, currentTime) {
+    // Deep Space Cosmic Obsidian Gradient
+    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
+    bgGrad.addColorStop(0, '#0a0a14');
+    bgGrad.addColorStop(0.5, '#050508');
+    bgGrad.addColorStop(1, '#0e0b16');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Subtle Firefly Cosmic Nebula Glow
+    const glowGrad = ctx.createRadialGradient(width / 2, height * 0.35, 10, width / 2, height * 0.35, width * 0.7);
+    glowGrad.addColorStop(0, 'rgba(147, 51, 234, 0.05)');
+    glowGrad.addColorStop(0.5, 'rgba(234, 88, 12, 0.04)');
+    glowGrad.addColorStop(1, 'transparent');
+    ctx.fillStyle = glowGrad;
+    ctx.fillRect(0, 0, width, height);
+
+    // Stars & Firefly Embers
+    for (const s of state.stars) {
+      if (s.isFirefly) {
+        ctx.fillStyle = `rgba(251, 191, 36, ${s.alpha * (0.6 + 0.4 * Math.sin(currentTime * 0.005 + s.x))})`;
+        ctx.shadowColor = '#f59e0b';
+        ctx.shadowBlur = 6;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.shadowBlur = 0;
+      } else {
+        ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+  }
+
   function spawnDrop(state, x, y) {
-    const drops = ['2x', '3x', 'S', 'D', 'Shield', '♥'];
-    const weights = [0.25, 0.20, 0.15, 0.15, 0.15, 0.10];
-    let r = Math.random();
-    let cumulative = 0;
     let chosen = '2x';
-    for (let i = 0; i < drops.length; i++) {
-      cumulative += weights[i];
-      if (r <= cumulative) {
-        chosen = drops[i];
-        break;
+    // If player has lost a life, 35% chance to drop a Heart to recover!
+    if (state.lives < state.maxLives && Math.random() < 0.35) {
+      chosen = '♥';
+    } else {
+      const drops = ['2x', '3x', 'S', 'Shield', 'D'];
+      const weights = [0.30, 0.25, 0.15, 0.15, 0.15];
+      let r = Math.random();
+      let cumulative = 0;
+      for (let i = 0; i < drops.length; i++) {
+        cumulative += weights[i];
+        if (r <= cumulative) {
+          chosen = drops[i];
+          break;
+        }
       }
     }
     state.powerups.push({ x, y, type: chosen });

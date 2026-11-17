@@ -304,10 +304,10 @@ export default function HomeTab() {
             sessionStorage.setItem('preferred_task_cat', 'app_tasks');
             switchTab('tasks');
           }}
-          className="flex flex-col items-center justify-center p-3.5 rounded-3xl glass-card hover:border-neutral-300 dark:hover:border-white/15 active:scale-95 transition-all shadow-sm"
+          className="flex flex-col items-center justify-center p-3.5 rounded-3xl glass-card hover:border-emerald-500/30 hover:scale-[1.02] active:scale-95 transition-all shadow-sm group"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500 mb-2">
-            <Smartphone className="w-5 h-5" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500 mb-2 group-hover:scale-110 transition-transform">
+            <Smartphone className="w-5 h-5 animate-wiggle-hover" />
           </div>
           <span className="text-xs font-black text-neutral-900 dark:text-white truncate max-w-full">App Tasks</span>
           <span className="text-[10px] text-emerald-500 font-bold">Earn PTS</span>
@@ -315,10 +315,10 @@ export default function HomeTab() {
 
         <button
           onClick={() => switchTab('arena')}
-          className="flex flex-col items-center justify-center p-3.5 rounded-3xl glass-card hover:border-neutral-300 dark:hover:border-white/15 active:scale-95 transition-all shadow-sm"
+          className="flex flex-col items-center justify-center p-3.5 rounded-3xl glass-card hover:border-amber-500/30 hover:scale-[1.02] active:scale-95 transition-all shadow-sm group"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-100 dark:bg-white/10 text-neutral-900 dark:text-white mb-2">
-            <Gamepad2 className="w-5 h-5" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 mb-2 group-hover:scale-110 transition-transform">
+            <Gamepad2 className="w-5 h-5 animate-bounce-slow" />
           </div>
           <span className="text-xs font-black text-neutral-900 dark:text-white">Play</span>
           <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium">Asteroid</span>
@@ -326,10 +326,10 @@ export default function HomeTab() {
 
         <button
           onClick={() => switchTab('tasks')}
-          className="flex flex-col items-center justify-center p-3.5 rounded-3xl glass-card hover:border-neutral-300 dark:hover:border-white/15 active:scale-95 transition-all shadow-sm"
+          className="flex flex-col items-center justify-center p-3.5 rounded-3xl glass-card hover:border-yellow-500/30 hover:scale-[1.02] active:scale-95 transition-all shadow-sm group"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-100 dark:bg-white/10 text-neutral-900 dark:text-white mb-2">
-            <Sparkles className="w-5 h-5 text-yellow-500" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-yellow-500/10 text-yellow-500 mb-2 group-hover:scale-110 transition-transform">
+            <Sparkles className="w-5 h-5 animate-pulse" />
           </div>
           <span className="text-xs font-black text-neutral-900 dark:text-white">Redeem</span>
           <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium">Tasks</span>
@@ -337,10 +337,10 @@ export default function HomeTab() {
 
         <button
           onClick={() => switchTab('refer')}
-          className="flex flex-col items-center justify-center p-3.5 rounded-3xl glass-card hover:border-neutral-300 dark:hover:border-white/15 active:scale-95 transition-all shadow-sm"
+          className="flex flex-col items-center justify-center p-3.5 rounded-3xl glass-card hover:border-cyan-500/30 hover:scale-[1.02] active:scale-95 transition-all shadow-sm group"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-neutral-100 dark:bg-white/10 text-neutral-900 dark:text-white mb-2">
-            <Share2 className="w-5 h-5 text-cyan-500" />
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-500 mb-2 group-hover:scale-110 transition-transform">
+            <Share2 className="w-5 h-5 group-hover:rotate-12 transition-transform" />
           </div>
           <span className="text-xs font-black text-neutral-900 dark:text-white">Invite</span>
           <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium">+400 each</span>

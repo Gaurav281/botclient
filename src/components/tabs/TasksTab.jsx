@@ -131,8 +131,8 @@ export default function TasksTab() {
       {/* Progress Card */}
       <div className="glass-card-elevated rounded-3xl p-5 flex items-center justify-between transition-colors">
         <div className="flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-200 dark:bg-white/10 text-neutral-900 dark:text-white">
-            <Smile className="w-7 h-7" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-neutral-200 dark:bg-white/10 text-neutral-900 dark:text-white shadow-sm">
+            <Smile className="w-7 h-7 animate-bounce-slow" />
           </div>
           <div>
             <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block">Completed</span>
@@ -249,14 +249,14 @@ export default function TasksTab() {
                 ) : isStarted ? (
                   <button
                     onClick={() => claimTaskReward(task._id)}
-                    className="btn-primary-white px-3.5 py-2 rounded-xl text-xs font-bold shadow-md animate-pulse"
+                    className="px-3.5 py-2 rounded-xl text-xs font-black shadow-lg bg-gradient-to-r from-amber-400 to-orange-500 text-black active:scale-95 animate-firefly-glow transition-all"
                   >
                     {isAppTask ? 'Verify & Claim' : 'Claim'}
                   </button>
                 ) : (
                   <button
                     onClick={() => handleStartTask(task)}
-                    className="btn-primary-white px-4 py-2 rounded-xl text-xs font-bold shadow-md"
+                    className="btn-primary-white px-4 py-2 rounded-xl text-xs font-bold shadow-md hover:scale-105 active:scale-95 transition-all"
                   >
                     {isAppTask ? 'Open App' : task.actionType === 'ad_watch' ? 'Watch' : 'Start'}
                   </button>

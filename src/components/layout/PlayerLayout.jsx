@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import Header from './Header';
 import BottomNavbar from './BottomNavbar';
 import ProfileModal from '../common/ProfileModal';
+import JoinChannelsGateModal from '../common/JoinChannelsGateModal';
 import GameRulesModal from '../game/GameRulesModal';
 import GameOverModal from '../game/GameOverModal';
 import BossVictoryModal from '../game/BossVictoryModal';
@@ -21,6 +22,7 @@ export default function PlayerLayout() {
 
       {/* Global Modals */}
       <ProfileModal />
+      <JoinChannelsGateModal />
       <GameRulesModal />
       <GameOverModal />
       <BossVictoryModal />

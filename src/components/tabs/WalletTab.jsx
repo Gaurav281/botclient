@@ -14,6 +14,11 @@ import {
   X,
   CreditCard,
   Coins,
+  ShieldCheck,
+  ExternalLink,
+  Sparkles,
+  Flame,
+  CheckCircle2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { formatINR, formatPoints, formatISTTime } from '../../utils/formatters';
@@ -200,49 +205,105 @@ export default function WalletTab() {
         </div>
       )}
 
-      {/* 4. Recent Activity */}
-      <div className="glass-card rounded-3xl p-5 transition-colors">
-        <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-bold text-neutral-900 dark:text-white">Recent activity</h3>
-          <span className="text-xs text-neutral-500 dark:text-neutral-400 font-mono">IST</span>
+      {/* 4. VERIFIED PAYOUT PROOFS SECTION (Replaces Recent Activity) */}
+      <div className="glass-card rounded-3xl p-5 relative overflow-hidden transition-colors border border-emerald-500/20 shadow-lg">
+        {/* Glow Accent */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center font-bold">
+              <ShieldCheck className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-black text-neutral-900 dark:text-white tracking-tight flex items-center gap-1.5">
+                <span>Verified Payout Proofs</span>
+                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+              </h3>
+              <p className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">100% Genuine • Live Receipts</p>
+            </div>
+          </div>
+
+          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+            Public Channel
+          </span>
         </div>
 
-        <div className="space-y-2">
-          {walletSummary?.recentTransactions?.map((tx, idx) => {
-            const isPositive = tx.amount > 0;
-            return (
-              <div
-                key={idx}
-                className="flex items-center justify-between p-3 rounded-2xl bg-neutral-100 dark:bg-[#141418] border border-neutral-200 dark:border-white/5"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-neutral-200 dark:bg-white/5 text-neutral-700 dark:text-neutral-300">
-                    {tx.type === 'game_reward' ? '🎮' : tx.type === 'convert' ? '🔄' : tx.type === 'withdrawal' ? '💸' : '🎁'}
-                  </div>
-                  <div>
-                    <p className="text-xs font-semibold text-neutral-900 dark:text-white">{tx.description}</p>
-                    <span className="text-[10px] text-neutral-500 font-mono">
-                      {formatISTTime(tx.createdAt)}
-                    </span>
-                  </div>
-                </div>
+        <p className="text-xs text-neutral-600 dark:text-neutral-400 my-3 leading-relaxed">
+          Every single UPI payout sent to our players is published publicly on our official proof channel for complete transparency.
+        </p>
 
-                <div className="text-right">
-                  <span
-                    className={`text-xs font-bold font-mono ${
-                      isPositive ? 'text-green-500' : 'text-rose-500'
-                    }`}
-                  >
-                    {isPositive ? `+${formatPoints(tx.amount)}` : formatPoints(tx.amount)} {tx.currency || 'PTS'}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
+        {/* Feature badges */}
+        <div className="grid grid-cols-2 gap-2 mb-4">
+          <div className="p-2.5 rounded-xl bg-neutral-100 dark:bg-white/[0.03] border border-neutral-200 dark:border-white/5 flex items-center gap-2">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+            <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200">Instant UPI Transfers</span>
+          </div>
+          <div className="p-2.5 rounded-xl bg-neutral-100 dark:bg-white/[0.03] border border-neutral-200 dark:border-white/5 flex items-center gap-2">
+            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
+            <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200">Payment Screenshots</span>
+          </div>
+        </div>
 
-          {(!walletSummary?.recentTransactions || walletSummary.recentTransactions.length === 0) && (
-            <p className="text-center text-xs text-neutral-400 py-4">No recent activity yet.</p>
-          )}
+        {/* Payout Proof Channel Button */}
+        <a
+          href="https://t.me/FireflyPayouts"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => triggerHaptic('medium')}
+          className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:brightness-110 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all text-center"
+        >
+          <ShieldCheck className="w-4 h-4 text-white" />
+          <span>Open Firefly Payout Proofs Channel</span>
+          <ExternalLink className="w-3.5 h-3.5 text-white/80" />
+        </a>
+      </div>
+
+      {/* 5. ANIMATION RELATED TO WEBSITE NAME ("Firefly Play") IN THE END */}
+      <div className="glass-card-elevated rounded-[32px] p-6 text-center relative overflow-hidden transition-all my-6 border border-amber-500/20">
+        {/* Animated Background Firefly Glow & Orbs */}
+        <div className="absolute -top-12 -left-12 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl pointer-events-none animate-pulse" />
+        <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-orange-600/20 rounded-full blur-2xl pointer-events-none animate-pulse" />
+
+        {/* Floating Embers */}
+        <div className="firefly-sparkle w-2 h-2 top-4 left-1/4" style={{ animationDelay: '0s' }} />
+        <div className="firefly-sparkle w-3 h-3 top-8 right-1/4" style={{ animationDelay: '1.2s' }} />
+        <div className="firefly-sparkle w-2.5 h-2.5 bottom-6 left-1/3" style={{ animationDelay: '2.4s' }} />
+
+        {/* Animated Firefly Mascot */}
+        <div className="relative inline-block mb-3">
+          <div className="absolute inset-0 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-full blur-lg opacity-60 animate-firefly-glow" />
+          <img
+            src="/firefly-mascot.png"
+            alt="Firefly Play Mascot"
+            className="relative w-24 h-24 mx-auto object-contain rounded-2xl drop-shadow-2xl animate-float"
+            onError={(e) => {
+              e.target.style.display = 'none';
+            }}
+          />
+        </div>
+
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[11px] font-mono font-bold tracking-wider uppercase mb-1.5">
+          <Flame className="w-3.5 h-3.5 text-amber-500 animate-bounce-slow" />
+          <span>Firefly Play</span>
+        </div>
+
+        <h4 className="text-base font-black text-neutral-900 dark:text-white tracking-tight">
+          Play • Earn • Withdraw
+        </h4>
+        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 max-w-xs mx-auto">
+          Every battle powers up your wallet. Convert your skill into real rewards anytime!
+        </p>
+
+        <div className="mt-4 pt-3 border-t border-neutral-200 dark:border-white/5 flex items-center justify-center gap-4 text-[11px] font-mono text-neutral-400">
+          <span className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            1,000 PTS = ₹1.00
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+            Min. ₹10 UPI
+          </span>
         </div>
       </div>
 
