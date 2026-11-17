@@ -23,6 +23,7 @@ import AddBioLinkModal from '../common/AddBioLinkModal';
 import {
   useWeeklyGraphQuery,
   useTasksQuery,
+  useTournamentsQuery,
   useLiveTickerQuery,
   useRedeemPromoMutation,
 } from '../../hooks/queries';
@@ -36,8 +37,17 @@ export default function HomeTab() {
   // TanStack Query caching & background refetch
   const { data: graphData, refetch: refetchGraph } = useWeeklyGraphQuery();
   const { data: tasksData, refetch: refetchTasks } = useTasksQuery();
+  const { data: tourneysData } = useTournamentsQuery();
   const { data: tickerData } = useLiveTickerQuery();
   const redeemMutation = useRedeemPromoMutation();
+
+  const activeTournamentsCount = (tourneysData?.tournaments || []).filter(
+    (t) => t.status === 'active'
+  ).length;
+  const pendingAppTasksCount = (tasksData?.tasks || []).filter(
+    (t) => t.category === 'app_tasks' && t.status !== 'completed'
+  ).length;
+  const totalOpenTasks = activeTournamentsCount + pendingAppTasksCount;
 
   const checkInData = tasksData?.checkIn || null;
   const liveTicker = tickerData?.ticker || [];
@@ -403,7 +413,7 @@ export default function HomeTab() {
           <div className="flex items-center gap-2">
             <h3 className="text-base font-black text-neutral-900 dark:text-white">Open tasks</h3>
             <span className="rounded-full bg-neutral-200 dark:bg-white/10 px-2 py-0.5 text-[11px] font-bold text-neutral-700 dark:text-neutral-300 font-mono">
-              6
+              {totalOpenTasks}
             </span>
           </div>
 

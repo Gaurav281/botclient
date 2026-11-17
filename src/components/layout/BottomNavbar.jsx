@@ -2,10 +2,22 @@ import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, CheckSquare, Gamepad2, Users, Wallet } from 'lucide-react';
 import { triggerHaptic } from '../../services/telegram';
+import { useTasksQuery, useTournamentsQuery } from '../../hooks/queries';
 
 export default function BottomNavbar() {
   const location = useLocation();
   const navigate = useNavigate();
+
+  const { data: tasksData } = useTasksQuery();
+  const { data: tourneysData } = useTournamentsQuery();
+
+  const activeTournamentsCount = (tourneysData?.tournaments || []).filter(
+    (t) => t.status === 'active'
+  ).length;
+  const pendingAppTasksCount = (tasksData?.tasks || []).filter(
+    (t) => t.category === 'app_tasks' && t.status !== 'completed'
+  ).length;
+  const totalAvailableTasks = activeTournamentsCount + pendingAppTasksCount;
 
   // Hide bottom navbar if inside admin routes
   if (location.pathname.startsWith('/admin')) {
@@ -14,7 +26,13 @@ export default function BottomNavbar() {
 
   const navItems = [
     { id: 'home', path: '/home', label: 'Home', icon: Home },
-    { id: 'tasks', path: '/tasks', label: 'Tasks', icon: CheckSquare, badge: '6' },
+    {
+      id: 'tasks',
+      path: '/tasks',
+      label: 'Tasks',
+      icon: CheckSquare,
+      badge: totalAvailableTasks > 0 ? String(totalAvailableTasks) : null,
+    },
     { id: 'arena', path: '/arena', label: 'Arena', icon: Gamepad2, isPill: true },
     { id: 'refer', path: '/refers', label: 'Refer', icon: Users },
     { id: 'wallet', path: '/wallet', label: 'Wallet', icon: Wallet },

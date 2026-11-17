@@ -32,7 +32,7 @@ export default function ReferTab() {
 
   const inviteLink =
     referralData?.inviteLink ||
-    `https://t.me/FireflyPlayBot?start=${user?.referralCode || 'pilot'}`;
+    `https://t.me/FireflyPlayBot?start=ref_${user?.referralCode || 'pilot'}`;
 
   const handleCopy = () => {
     triggerHaptic('light');

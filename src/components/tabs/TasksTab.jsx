@@ -243,9 +243,9 @@ export default function TasksTab() {
           )}
 
           {!loadingTourneys && tournaments.length === 0 && (
-            <div className="glass-card rounded-3xl p-8 text-center text-neutral-400">
-              <Trophy className="w-12 h-12 mx-auto text-neutral-500 mb-3 opacity-60" />
-              <h3 className="text-sm font-bold text-white mb-1">No Active Tournaments</h3>
+            <div className="glass-card rounded-3xl p-8 text-center text-neutral-500 dark:text-neutral-400">
+              <Trophy className="w-12 h-12 mx-auto text-neutral-400 dark:text-neutral-500 mb-3 opacity-60" />
+              <h3 className="text-sm font-bold text-neutral-900 dark:text-white mb-1">No Active Tournaments</h3>
               <p className="text-xs text-neutral-500 max-w-xs mx-auto">
                 Check back shortly! New high-stakes tournaments are hosted regularly.
               </p>
@@ -271,28 +271,28 @@ export default function TasksTab() {
                       <span
                         className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold tracking-wider uppercase ${
                           !isEnded
-                            ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
-                            : 'bg-neutral-500/20 text-neutral-400 border border-neutral-500/30'
+                            ? 'bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/20 dark:text-emerald-400 border border-emerald-500/20 dark:border-emerald-500/30'
+                            : 'bg-neutral-200 dark:bg-neutral-500/20 text-neutral-600 dark:text-neutral-400 border border-neutral-300 dark:border-neutral-500/30'
                         }`}
                       >
                         {!isEnded ? '● Live' : 'Completed'}
                       </span>
-                      <span className="text-[11px] text-neutral-400 font-mono flex items-center gap-1">
+                      <span className="text-[11px] text-neutral-500 dark:text-neutral-400 font-mono flex items-center gap-1">
                         <Clock className="w-3 h-3" />
                         {timeLeft}
                       </span>
                     </div>
-                    <h3 className="text-base font-black text-white">{tourney.title}</h3>
+                    <h3 className="text-base font-black text-neutral-900 dark:text-white">{tourney.title}</h3>
                   </div>
 
                   <div className="text-right">
-                    <span className="text-[10px] uppercase font-mono text-neutral-400 block">Prize Pool</span>
+                    <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block">Prize Pool</span>
                     <div className="flex items-center justify-end gap-1">
-                      <Trophy className="w-4 h-4 text-amber-400" />
-                      <span className="text-lg font-black text-amber-400 font-mono">
+                      <Trophy className="w-4 h-4 text-amber-500 dark:text-amber-400" />
+                      <span className="text-lg font-black text-amber-500 dark:text-amber-400 font-mono">
                         {formatPoints(tourney.prizePool)}
                       </span>
-                      <span className="text-[10px] text-neutral-400">PTS</span>
+                      <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">PTS</span>
                     </div>
                   </div>
                 </div>
@@ -300,20 +300,20 @@ export default function TasksTab() {
                 {/* Tournament Stats Pill Grid */}
                 <div className="grid grid-cols-3 gap-2 my-3">
                   <div className="rounded-2xl bg-neutral-100 dark:bg-white/[0.04] p-2.5 border border-neutral-200 dark:border-white/5 text-center">
-                    <span className="text-[9px] uppercase font-mono text-neutral-400 block">Entry Fee</span>
-                    <span className="text-xs font-black text-white font-mono">{tourney.entryFee} PTS</span>
+                    <span className="text-[9px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block">Entry Fee</span>
+                    <span className="text-xs font-black text-neutral-900 dark:text-white font-mono">{tourney.entryFee} PTS</span>
                   </div>
 
                   <div className="rounded-2xl bg-neutral-100 dark:bg-white/[0.04] p-2.5 border border-neutral-200 dark:border-white/5 text-center">
-                    <span className="text-[9px] uppercase font-mono text-neutral-400 block">Players</span>
-                    <span className="text-xs font-black text-white font-mono">
+                    <span className="text-[9px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block">Players</span>
+                    <span className="text-xs font-black text-neutral-900 dark:text-white font-mono">
                       {tourney.participantCount} / {tourney.maxParticipants || '∞'}
                     </span>
                   </div>
 
                   <div className="rounded-2xl bg-neutral-100 dark:bg-white/[0.04] p-2.5 border border-neutral-200 dark:border-white/5 text-center">
-                    <span className="text-[9px] uppercase font-mono text-neutral-400 block">Winners</span>
-                    <span className="text-xs font-black text-white font-mono">
+                    <span className="text-[9px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block">Winners</span>
+                    <span className="text-xs font-black text-neutral-900 dark:text-white font-mono">
                       Top {tourney.winnerCount}
                     </span>
                   </div>
@@ -326,7 +326,7 @@ export default function TasksTab() {
                       <span className="text-sm">
                         {r.rank === 1 ? '🥇' : r.rank === 2 ? '🥈' : '🥉'}
                       </span>
-                      <span className="text-[11px] font-bold text-neutral-300">
+                      <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200">
                         {formatPoints(r.reward)} PTS
                       </span>
                     </div>
@@ -335,23 +335,23 @@ export default function TasksTab() {
 
                 {/* User Status Card (if joined) */}
                 {hasJoined && (
-                  <div className="rounded-2xl bg-gradient-to-r from-neutral-800 to-neutral-900 border border-white/10 p-3 mb-3 flex items-center justify-between text-xs">
+                  <div className="rounded-2xl bg-neutral-100 dark:bg-gradient-to-r dark:from-neutral-800 dark:to-neutral-900 border border-neutral-200 dark:border-white/10 p-3 mb-3 flex items-center justify-between text-xs">
                     <div>
-                      <span className="text-[10px] uppercase font-mono text-neutral-400 block">Your Standing</span>
+                      <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block">Your Standing</span>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-sm font-black text-emerald-400 font-mono">
+                        <span className="text-sm font-black text-emerald-600 dark:text-emerald-400 font-mono">
                           Rank #{userPart.rank || '—'}
                         </span>
-                        <span className="text-neutral-500">•</span>
-                        <span className="text-xs font-bold text-white font-mono">
+                        <span className="text-neutral-400 dark:text-neutral-500">•</span>
+                        <span className="text-xs font-bold text-neutral-900 dark:text-white font-mono">
                           Best: {userPart.bestScore}
                         </span>
                       </div>
                     </div>
 
                     <div className="text-right">
-                      <span className="text-[10px] uppercase font-mono text-neutral-400 block">Attempts</span>
-                      <span className="text-xs font-black text-white font-mono">
+                      <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block">Attempts</span>
+                      <span className="text-xs font-black text-neutral-900 dark:text-white font-mono">
                         {userPart.attempts} / 10
                       </span>
                     </div>
@@ -378,7 +378,7 @@ export default function TasksTab() {
                       {userPart.attempts < 10 ? (
                         <button
                           onClick={() => handlePlayTournamentMatch(tourney)}
-                          className="w-full py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg bg-white text-black hover:bg-neutral-100 active:scale-95 transition-all"
+                          className="w-full py-3.5 rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg bg-black text-white dark:bg-white dark:text-black hover:opacity-90 active:scale-95 transition-all"
                         >
                           {userPart.attempts === 0 ? (
                             <>
@@ -393,7 +393,7 @@ export default function TasksTab() {
                           )}
                         </button>
                       ) : (
-                        <div className="w-full py-3 rounded-2xl text-xs font-bold text-center bg-white/5 border border-white/10 text-neutral-400">
+                        <div className="w-full py-3 rounded-2xl text-xs font-bold text-center bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 text-neutral-500 dark:text-neutral-400">
                           All 10 Attempts Completed • Best: {userPart.bestScore}
                         </div>
                       )}
@@ -401,7 +401,7 @@ export default function TasksTab() {
                   )}
 
                   {isEnded && (
-                    <div className="w-full py-3 rounded-2xl text-xs font-bold text-center bg-white/5 border border-white/10 text-neutral-400">
+                    <div className="w-full py-3 rounded-2xl text-xs font-bold text-center bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 text-neutral-500 dark:text-neutral-400">
                       Tournament Completed
                     </div>
                   )}
@@ -409,7 +409,7 @@ export default function TasksTab() {
                   {/* Toggle Leaderboard */}
                   <button
                     onClick={() => toggleLeaderboard(tourney._id)}
-                    className="w-full py-2 flex items-center justify-center gap-1.5 text-xs font-bold text-neutral-400 hover:text-white transition-colors"
+                    className="w-full py-2 flex items-center justify-center gap-1.5 text-xs font-bold text-neutral-600 dark:text-neutral-400 hover:text-black dark:hover:text-white transition-colors"
                   >
                     <span>Leaderboard ({tourney.leaderboard?.length || 0})</span>
                     {isExpanded ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
@@ -418,8 +418,8 @@ export default function TasksTab() {
 
                 {/* Expanded Leaderboard Section */}
                 {isExpanded && (
-                  <div className="mt-3 pt-3 border-t border-white/5 space-y-2 animate-fade-in">
-                    <h4 className="text-[11px] font-mono uppercase text-neutral-400 tracking-wider">
+                  <div className="mt-3 pt-3 border-t border-neutral-200 dark:border-white/5 space-y-2 animate-fade-in">
+                    <h4 className="text-[11px] font-mono uppercase text-neutral-500 dark:text-neutral-400 tracking-wider">
                       Top 10 Participants
                     </h4>
 
@@ -436,24 +436,24 @@ export default function TasksTab() {
                           key={p.telegramId}
                           className={`rounded-xl px-3 py-2 flex items-center justify-between text-xs ${
                             isMe
-                              ? 'bg-white/15 border border-white/25 font-bold'
-                              : 'bg-white/[0.02] border border-white/5'
+                              ? 'bg-neutral-200 dark:bg-white/15 border border-neutral-300 dark:border-white/25 font-bold'
+                              : 'bg-neutral-50 dark:bg-white/[0.02] border border-neutral-200 dark:border-white/5'
                           }`}
                         >
                           <div className="flex items-center gap-2 min-w-0">
-                            <span className="w-5 text-center font-mono font-black text-neutral-400">
+                            <span className="w-5 text-center font-mono font-black text-neutral-500 dark:text-neutral-400">
                               {p.rank === 1 ? '🥇' : p.rank === 2 ? '🥈' : p.rank === 3 ? '🥉' : `#${p.rank}`}
                             </span>
-                            <span className="truncate text-white font-medium">
+                            <span className="truncate text-neutral-900 dark:text-white font-medium">
                               {p.firstName || p.username} {isMe ? '(You)' : ''}
                             </span>
                           </div>
 
                           <div className="flex items-center gap-3">
-                            <span className="text-[10px] text-neutral-400 font-mono">
+                            <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">
                               {p.attempts}/10 tries
                             </span>
-                            <span className="font-mono font-black text-emerald-400">
+                            <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">
                               {p.bestScore}
                             </span>
                           </div>
@@ -463,12 +463,12 @@ export default function TasksTab() {
 
                     {/* Participant's rank if not in top 10 */}
                     {hasJoined && userPart?.rank > 10 && (
-                      <div className="rounded-xl px-3 py-2 flex items-center justify-between text-xs bg-white/10 border border-white/20 mt-2 font-bold">
+                      <div className="rounded-xl px-3 py-2 flex items-center justify-between text-xs bg-neutral-200 dark:bg-white/10 border border-neutral-300 dark:border-white/20 mt-2 font-bold">
                         <div className="flex items-center gap-2">
-                          <span className="font-mono text-emerald-400">#{userPart.rank}</span>
-                          <span className="text-white">You</span>
+                          <span className="font-mono text-emerald-600 dark:text-emerald-400">#{userPart.rank}</span>
+                          <span className="text-neutral-900 dark:text-white">You</span>
                         </div>
-                        <span className="font-mono font-black text-emerald-400">
+                        <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">
                           {userPart.bestScore} PTS
                         </span>
                       </div>

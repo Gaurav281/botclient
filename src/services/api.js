@@ -44,6 +44,7 @@ export const api = {
 
   // Wallet
   getWalletSummary: () => request('/wallet/summary'),
+  getPayoutHistory: () => request('/wallet/payout-history'),
   getWeeklyGraph: () => request('/wallet/weekly-graph'),
   convertPoints: (pointsToConvert) => request('/wallet/convert', { method: 'POST', body: JSON.stringify({ pointsToConvert }) }),
   submitWithdrawal: (upiId, amountInr) => request('/wallet/withdraw', { method: 'POST', body: JSON.stringify({ upiId, amountInr }) }),

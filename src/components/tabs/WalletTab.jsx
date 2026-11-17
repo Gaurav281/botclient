@@ -7,6 +7,7 @@ import { triggerHaptic } from '../../services/telegram';
 import { sound } from '../../services/audio';
 import {
   useWalletSummaryQuery,
+  usePayoutHistoryQuery,
   useConvertPointsMutation,
   useWithdrawMutation,
 } from '../../hooks/queries';
@@ -23,25 +24,32 @@ import {
   Flame,
   CheckCircle2,
   Edit2,
+  Clock,
+  History,
+  AlertCircle,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import { formatINR, formatPoints, formatISTTime } from '../../utils/formatters';
+import { formatINR, formatPoints, formatISTTime, formatISTDateTime } from '../../utils/formatters';
 
 export default function WalletTab() {
   const { user, setUser, showToast } = useGame();
   const { data: walletSummary, isLoading } = useWalletSummaryQuery();
+  const { data: payoutHistoryData, isLoading: loadingPayouts, refetch: refetchPayoutHistory } = usePayoutHistoryQuery();
   const convertMutation = useConvertPointsMutation();
   const withdrawMutation = useWithdrawMutation();
 
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showConvertModal, setShowConvertModal] = useState(false);
   const [showEditUpiModal, setShowEditUpiModal] = useState(false);
+  const [showPayoutHistoryModal, setShowPayoutHistoryModal] = useState(false);
   const [newUpiInput, setNewUpiInput] = useState('');
   const [savingUpi, setSavingUpi] = useState(false);
 
   const [upiId, setUpiId] = useState('');
-  const [withdrawAmount, setWithdrawAmount] = useState('10');
+  const [withdrawAmount, setWithdrawAmount] = useState('5');
   const [pointsToConvert, setPointsToConvert] = useState(() => String(user?.coins || 0));
+
+  const payoutHistoryList = payoutHistoryData?.withdrawals || walletSummary?.withdrawals || [];
 
   useEffect(() => {
     if (walletSummary?.savedUpiId) {
@@ -109,8 +117,8 @@ export default function WalletTab() {
     }
 
     const amount = parseFloat(withdrawAmount);
-    if (!amount || amount < 10) {
-      showToast('Minimum withdrawal is ₹10', 'warning');
+    if (!amount || amount < 5) {
+      showToast('Minimum withdrawal is ₹5', 'warning');
       return;
     }
 
@@ -139,7 +147,7 @@ export default function WalletTab() {
   const withdrawable = user?.withdrawableBalance || 0;
   // 1000 PTS = 1 INR
   const totalInr = coins / 1000 + withdrawable;
-  const minWithdraw = walletSummary?.minWithdrawInr || 10;
+  const minWithdraw = walletSummary?.minWithdrawInr || 5;
 
   return (
     <div className="space-y-4 px-4 pb-24 pt-2">
@@ -220,6 +228,35 @@ export default function WalletTab() {
         </div>
         <span className="text-neutral-500 dark:text-neutral-400">Min. withdraw ₹{minWithdraw}</span>
       </div>
+
+      {/* Payout History Button */}
+      <button
+        type="button"
+        onClick={() => {
+          triggerHaptic('light');
+          refetchPayoutHistory();
+          setShowPayoutHistoryModal(true);
+        }}
+        className="w-full glass-card rounded-2xl p-3.5 flex items-center justify-between border border-neutral-200 dark:border-white/5 hover:border-black/20 dark:hover:border-white/20 transition-all active:scale-[0.99] group"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-200 dark:bg-white/10 text-neutral-900 dark:text-white group-hover:scale-105 transition-transform">
+            <History className="w-4 h-4" />
+          </div>
+          <div className="text-left">
+            <span className="text-xs font-bold text-neutral-900 dark:text-white block">
+              Payout History
+            </span>
+            <span className="text-[10px] text-neutral-500 dark:text-neutral-400">
+              View latest 10 withdrawals & transaction proofs
+            </span>
+          </div>
+        </div>
+        <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 flex items-center gap-1 group-hover:text-black dark:group-hover:text-white">
+          <span>View</span>
+          <ArrowUpRight className="w-3.5 h-3.5" />
+        </span>
+      </button>
 
       {/* 3. Saved UPI ID Card (Click to edit & auto-used on withdraw) */}
       <div
@@ -351,7 +388,7 @@ export default function WalletTab() {
                 </div>
                 <input
                   type="number"
-                  min="10"
+                  min="5"
                   step="1"
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
@@ -359,7 +396,7 @@ export default function WalletTab() {
                   required
                 />
                 <span className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-1 block">
-                  Minimum withdrawal is ₹10.
+                  Minimum withdrawal is ₹5.
                 </span>
               </div>
 
@@ -525,6 +562,121 @@ export default function WalletTab() {
                 {savingUpi ? 'Saving...' : 'Save UPI ID'}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* PAYOUT HISTORY MODAL (LATEST 10 WITHDRAWALS) */}
+      {showPayoutHistoryModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4 animate-fade-in">
+          <div className="w-full max-w-md rounded-t-[36px] sm:rounded-3xl bg-white dark:bg-[#121216] border-t sm:border border-neutral-200 dark:border-white/10 p-5 pb-8 text-neutral-900 dark:text-white shadow-2xl relative max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-white/5">
+              <div className="flex items-center gap-2">
+                <div className="h-8 w-8 rounded-xl bg-neutral-100 dark:bg-white/10 flex items-center justify-center text-neutral-900 dark:text-white">
+                  <History className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black">Payout History</h3>
+                  <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">
+                    Latest 10 Withdrawal Requests
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowPayoutHistoryModal(false)}
+                className="h-8 w-8 rounded-full flex items-center justify-center text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-white/10"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto space-y-2.5 my-3 pr-1 flex-1">
+              {loadingPayouts && (
+                <div className="space-y-2">
+                  {[1, 2, 3].map((n) => (
+                    <div key={n} className="h-16 rounded-2xl bg-neutral-100 dark:bg-white/5 animate-pulse" />
+                  ))}
+                </div>
+              )}
+
+              {!loadingPayouts && payoutHistoryList.length === 0 && (
+                <div className="text-center py-10 text-neutral-400">
+                  <CreditCard className="w-10 h-10 mx-auto text-neutral-300 dark:text-neutral-600 mb-2" />
+                  <p className="text-xs font-bold">No Payout Requests Yet</p>
+                  <p className="text-[11px] text-neutral-500 mt-1">
+                    Convert PTS to withdrawable INR and withdraw directly to your UPI!
+                  </p>
+                </div>
+              )}
+
+              {payoutHistoryList.map((w) => {
+                const isSuccess = w.status === 'completed';
+                const isPending = w.status === 'pending';
+                const isRejected = w.status === 'rejected';
+
+                return (
+                  <div
+                    key={w._id}
+                    className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-white/[0.03] border border-neutral-200 dark:border-white/5 space-y-1.5"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-base font-black font-mono text-neutral-900 dark:text-white">
+                          ₹{Number(w.amountInr).toFixed(2)}
+                        </span>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase ${
+                            isSuccess
+                              ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                              : isPending
+                              ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                              : 'bg-rose-500/10 text-rose-600 dark:text-rose-400 border border-rose-500/20'
+                          }`}
+                        >
+                          {isSuccess ? '● Transferred' : isPending ? '⏳ In Review' : '✕ Refunded'}
+                        </span>
+                      </div>
+
+                      <span className="text-[10px] text-neutral-400 font-mono">
+                        {w.createdAt ? new Date(w.createdAt).toLocaleDateString('en-IN', {
+                          day: '2-digit',
+                          month: 'short',
+                          hour: '2-digit',
+                          minute: '2-digit',
+                        }) : ''}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400 font-mono">
+                      <span>UPI: {w.upiId}</span>
+                      {w.pointsDeducted > 0 && (
+                        <span>-{w.pointsDeducted} PTS</span>
+                      )}
+                    </div>
+
+                    {w.transactionRef && (
+                      <div className="text-[10px] font-mono bg-neutral-100 dark:bg-white/5 px-2 py-1 rounded-lg text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 truncate">
+                        Ref: {w.transactionRef}
+                      </div>
+                    )}
+
+                    {w.rejectionReason && (
+                      <div className="text-[10px] font-mono text-rose-500 bg-rose-500/10 px-2 py-1 rounded-lg border border-rose-500/20">
+                        {w.rejectionReason}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => setShowPayoutHistoryModal(false)}
+              className="w-full py-3 rounded-2xl bg-neutral-100 dark:bg-white/10 hover:bg-neutral-200 dark:hover:bg-white/20 font-bold text-xs text-neutral-900 dark:text-white transition-all"
+            >
+              Close
+            </button>
           </div>
         </div>
       )}

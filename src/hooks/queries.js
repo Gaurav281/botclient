@@ -5,6 +5,7 @@ import { useAuthStore } from '../stores/authStore';
 // Query Keys
 export const queryKeys = {
   walletSummary: ['walletSummary'],
+  payoutHistory: ['payoutHistory'],
   weeklyGraph: ['weeklyGraph'],
   tasks: ['tasks'],
   liveTicker: ['liveTicker'],
@@ -25,6 +26,16 @@ export function useWalletSummaryQuery() {
     queryFn: () => api.getWalletSummary(),
     enabled: Boolean(user),
     staleTime: 1000 * 20, // 20s
+  });
+}
+
+export function usePayoutHistoryQuery() {
+  const user = useAuthStore((s) => s.user);
+  return useQuery({
+    queryKey: queryKeys.payoutHistory,
+    queryFn: () => api.getPayoutHistory(),
+    enabled: Boolean(user),
+    staleTime: 1000 * 15,
   });
 }
 
@@ -125,6 +136,7 @@ export function useWithdrawMutation() {
     onSuccess: (data) => {
       if (data.user) setUser(data.user);
       queryClient.invalidateQueries({ queryKey: queryKeys.walletSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.payoutHistory });
       showToast(data.message, 'success');
     },
     onError: (err) => {
