@@ -259,54 +259,6 @@ export default function WalletTab() {
         </a>
       </div>
 
-      {/* 5. ANIMATION RELATED TO WEBSITE NAME ("Firefly Play") IN THE END */}
-      <div className="glass-card-elevated rounded-[32px] p-6 text-center relative overflow-hidden transition-all my-6 border border-amber-500/20">
-        {/* Animated Background Firefly Glow & Orbs */}
-        <div className="absolute -top-12 -left-12 w-32 h-32 bg-amber-500/20 rounded-full blur-2xl pointer-events-none animate-pulse" />
-        <div className="absolute -bottom-12 -right-12 w-32 h-32 bg-orange-600/20 rounded-full blur-2xl pointer-events-none animate-pulse" />
-
-        {/* Floating Embers */}
-        <div className="firefly-sparkle w-2 h-2 top-4 left-1/4" style={{ animationDelay: '0s' }} />
-        <div className="firefly-sparkle w-3 h-3 top-8 right-1/4" style={{ animationDelay: '1.2s' }} />
-        <div className="firefly-sparkle w-2.5 h-2.5 bottom-6 left-1/3" style={{ animationDelay: '2.4s' }} />
-
-        {/* Animated Firefly Mascot */}
-        <div className="relative inline-block mb-3">
-          <div className="absolute inset-0 bg-gradient-to-tr from-amber-400 to-orange-500 rounded-full blur-lg opacity-60 animate-firefly-glow" />
-          <img
-            src="/firefly-mascot.png"
-            alt="Firefly Play Mascot"
-            className="relative w-24 h-24 mx-auto object-contain rounded-2xl drop-shadow-2xl animate-float"
-            onError={(e) => {
-              e.target.style.display = 'none';
-            }}
-          />
-        </div>
-
-        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-500 text-[11px] font-mono font-bold tracking-wider uppercase mb-1.5">
-          <Flame className="w-3.5 h-3.5 text-amber-500 animate-bounce-slow" />
-          <span>Firefly Play</span>
-        </div>
-
-        <h4 className="text-base font-black text-neutral-900 dark:text-white tracking-tight">
-          Play • Earn • Withdraw
-        </h4>
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-1 max-w-xs mx-auto">
-          Every battle powers up your wallet. Convert your skill into real rewards anytime!
-        </p>
-
-        <div className="mt-4 pt-3 border-t border-neutral-200 dark:border-white/5 flex items-center justify-center gap-4 text-[11px] font-mono text-neutral-400">
-          <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-            1,000 PTS = ₹1.00
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-            Min. ₹10 UPI
-          </span>
-        </div>
-      </div>
-
       {/* WITHDRAW BOTTOM SHEET (Matching Reference Panel) */}
       {showWithdrawModal && (
         <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm p-0 animate-fade-in">

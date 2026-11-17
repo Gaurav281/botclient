@@ -41,21 +41,21 @@ export default function BottomNavbar() {
               <button
                 key={item.id}
                 onClick={() => handleNav(item.path)}
-                className="flex flex-col items-center group -mt-1 active:scale-95 transition-transform"
+                className="flex flex-col items-center group -mt-1 active:scale-95 transition-all"
               >
                 <div
-                  className={`flex h-8 px-4 items-center justify-center rounded-full transition-all duration-200 ${
+                  className={`flex h-9 px-4 items-center justify-center rounded-full transition-all ${
                     isActive
-                      ? 'bg-gradient-to-r from-amber-400 via-orange-500 to-amber-500 text-black shadow-lg shadow-orange-500/30 scale-105 animate-firefly-glow'
-                      : 'bg-neutral-100 text-neutral-800 dark:bg-[#1b1b22] dark:text-white hover:bg-neutral-200 dark:hover:bg-[#262630] border border-neutral-200 dark:border-white/10 hover:scale-105'
+                      ? 'bg-black text-white dark:bg-white dark:text-black shadow-lg font-black'
+                      : 'bg-neutral-100 text-neutral-800 dark:bg-[#1b1b22] dark:text-white hover:bg-neutral-200 dark:hover:bg-[#262630] border border-neutral-200 dark:border-white/10'
                   }`}
                 >
-                  <Icon className="w-4 h-4 mr-1.5 animate-wiggle-hover" />
+                  <Icon className="w-4 h-4 mr-1.5" />
                   <span className="text-xs font-black font-mono">Play</span>
                 </div>
                 <span
-                  className={`text-[10px] mt-1 font-semibold transition-colors ${
-                    isActive ? 'text-amber-500 font-black' : 'text-neutral-500 dark:text-neutral-400'
+                  className={`text-[11px] mt-1 font-bold transition-colors ${
+                    isActive ? 'text-black dark:text-white font-black' : 'text-neutral-500 dark:text-neutral-400'
                   }`}
                 >
                   {item.label}
@@ -68,29 +68,35 @@ export default function BottomNavbar() {
             <button
               key={item.id}
               onClick={() => handleNav(item.path)}
-              className="relative flex flex-col items-center py-1 px-3 transition-all active:scale-90"
+              className="relative flex flex-col items-center py-1 px-2.5 transition-all active:scale-95"
             >
-              <div className="relative">
-                <Icon
-                  className={`w-5 h-5 transition-all duration-200 ${
-                    isActive
-                      ? 'text-black dark:text-white scale-110 -translate-y-0.5 drop-shadow-[0_2px_8px_rgba(255,255,255,0.3)]'
-                      : 'text-neutral-400 dark:text-neutral-500 hover:text-black dark:hover:text-neutral-300 hover:scale-110'
-                  }`}
-                />
-                {item.badge && !isActive && (
-                  <span className="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-amber-500 text-black text-[9px] font-black px-1 shadow-sm animate-pulse">
-                    {item.badge}
-                  </span>
-                )}
-              </div>
-              <span
-                className={`text-[10px] mt-1 font-semibold transition-colors ${
-                  isActive ? 'text-black dark:text-white font-black' : 'text-neutral-500 dark:text-neutral-400'
+              <div
+                className={`flex flex-col items-center px-2.5 py-1 rounded-2xl transition-all ${
+                  isActive ? 'bg-neutral-100 dark:bg-white/10' : ''
                 }`}
               >
-                {item.label}
-              </span>
+                <div className="relative">
+                  <Icon
+                    className={`w-6 h-6 transition-colors ${
+                      isActive
+                        ? 'text-black dark:text-white stroke-[2.4]'
+                        : 'text-neutral-400 dark:text-neutral-500 hover:text-black dark:hover:text-neutral-300'
+                    }`}
+                  />
+                  {item.badge && !isActive && (
+                    <span className="absolute -top-1.5 -right-2.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-black text-white dark:bg-white dark:text-black text-[9px] font-black px-1 shadow-sm">
+                      {item.badge}
+                    </span>
+                  )}
+                </div>
+                <span
+                  className={`text-[11px] mt-0.5 font-bold transition-colors ${
+                    isActive ? 'text-black dark:text-white font-black' : 'text-neutral-500 dark:text-neutral-400'
+                  }`}
+                >
+                  {item.label}
+                </span>
+              </div>
             </button>
           );
         })}

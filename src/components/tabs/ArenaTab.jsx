@@ -129,15 +129,14 @@ export default function ArenaTab() {
             </p>
           </div>
 
-          {/* Spaceship Graphic with Floating Animation */}
-          <div className="relative w-24 h-24 flex items-center justify-center animate-float">
-            <div className="absolute inset-0 border border-amber-500/20 dark:border-amber-500/30 rounded-full animate-ping opacity-20" />
-            <div className="absolute inset-0 border border-neutral-300 dark:border-white/10 rounded-full" />
-            <div className="h-10 w-0.5 border-r border-dashed border-amber-500/40" />
-            <svg className="w-10 h-10 text-neutral-900 dark:text-white drop-shadow-[0_0_15px_rgba(245,158,11,0.5)]" viewBox="0 0 24 24" fill="currentColor">
+          {/* Spaceship Graphic */}
+          <div className="relative w-24 h-24 flex items-center justify-center">
+            <div className="absolute inset-0 border border-neutral-300 dark:border-white/5 rounded-full" />
+            <div className="h-10 w-0.5 border-r border-dashed border-neutral-400 dark:border-white/30" />
+            <svg className="w-9 h-9 text-neutral-900 dark:text-white drop-shadow-[0_0_12px_rgba(0,0,0,0.2)] dark:drop-shadow-[0_0_12px_rgba(255,255,255,0.4)]" viewBox="0 0 24 24" fill="currentColor">
               <path d="M12 2L3 22l9-3 9 3L12 2z" />
             </svg>
-            <div className="absolute top-2 right-2 h-4 w-4 rounded-full border border-amber-500/40 bg-amber-500/20 animate-pulse" />
+            <div className="absolute top-2 right-2 h-4 w-4 rounded-full border border-neutral-400 dark:border-neutral-700 bg-neutral-200/40 dark:bg-neutral-800/40" />
           </div>
         </div>
 
@@ -176,9 +175,9 @@ export default function ArenaTab() {
           <button
             onClick={() => launchGame(difficulty)}
             disabled={hasBossLock}
-            className={`w-full py-4 rounded-2xl text-sm font-black flex items-center justify-center gap-2 shadow-xl transition-all ${
+            className={`w-full py-4 rounded-2xl text-sm font-bold flex items-center justify-center gap-2 shadow-xl transition-all ${
               !hasBossLock
-                ? 'bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 text-black shadow-amber-500/25 active:scale-95 animate-firefly-glow hover:brightness-110'
+                ? 'btn-primary-white active:scale-95'
                 : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400 cursor-not-allowed'
             }`}
           >
@@ -189,8 +188,8 @@ export default function ArenaTab() {
               </>
             ) : (
               <>
-                <Play className="w-4 h-4 fill-black" />
-                <span>Launch Game • Up to {currentReward} PTS</span>
+                <Play className="w-4 h-4 fill-current" />
+                <span>Play • Up to {currentReward} PTS</span>
               </>
             )}
           </button>

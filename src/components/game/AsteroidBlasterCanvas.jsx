@@ -130,16 +130,14 @@ export default function AsteroidBlasterCanvas() {
       lastPowerupTime: 0,
     };
 
-    // Stars & Glowing Firefly Space Dust
-    for (let i = 0; i < 75; i++) {
-      const isFirefly = Math.random() < 0.16;
+    // Stars
+    for (let i = 0; i < 70; i++) {
       state.stars.push({
         x: Math.random() * (canvas.width || 360),
         y: Math.random() * (canvas.height || 600),
-        size: isFirefly ? Math.random() * 2 + 1.2 : Math.random() * 1.5 + 0.5,
-        speed: isFirefly ? Math.random() * 0.5 + 0.2 : Math.random() * 0.8 + 0.3,
+        size: Math.random() * 1.8 + 0.6,
+        speed: Math.random() * 0.7 + 0.3,
         alpha: Math.random() * 0.7 + 0.3,
-        isFirefly,
       });
     }
 
@@ -886,38 +884,15 @@ export default function AsteroidBlasterCanvas() {
   }
 
   function renderCosmicBackground(ctx, state, width, height, currentTime) {
-    // Deep Space Cosmic Obsidian Gradient
-    const bgGrad = ctx.createLinearGradient(0, 0, 0, height);
-    bgGrad.addColorStop(0, '#0a0a14');
-    bgGrad.addColorStop(0.5, '#050508');
-    bgGrad.addColorStop(1, '#0e0b16');
-    ctx.fillStyle = bgGrad;
+    ctx.fillStyle = '#050508';
     ctx.fillRect(0, 0, width, height);
 
-    // Subtle Firefly Cosmic Nebula Glow
-    const glowGrad = ctx.createRadialGradient(width / 2, height * 0.35, 10, width / 2, height * 0.35, width * 0.7);
-    glowGrad.addColorStop(0, 'rgba(147, 51, 234, 0.05)');
-    glowGrad.addColorStop(0.5, 'rgba(234, 88, 12, 0.04)');
-    glowGrad.addColorStop(1, 'transparent');
-    ctx.fillStyle = glowGrad;
-    ctx.fillRect(0, 0, width, height);
-
-    // Stars & Firefly Embers
+    // Stars
     for (const s of state.stars) {
-      if (s.isFirefly) {
-        ctx.fillStyle = `rgba(251, 191, 36, ${s.alpha * (0.6 + 0.4 * Math.sin(currentTime * 0.005 + s.x))})`;
-        ctx.shadowColor = '#f59e0b';
-        ctx.shadowBlur = 6;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      } else {
-        ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
-        ctx.beginPath();
-        ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
-        ctx.fill();
-      }
+      ctx.fillStyle = `rgba(255, 255, 255, ${s.alpha})`;
+      ctx.beginPath();
+      ctx.arc(s.x, s.y, s.size, 0, Math.PI * 2);
+      ctx.fill();
     }
   }
 

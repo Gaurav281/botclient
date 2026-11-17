@@ -87,18 +87,18 @@ export default function ReferTab() {
           <div className="flex items-center gap-2">
             <button
               onClick={handleShare}
-              className="flex-1 py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 font-black shadow-lg bg-gradient-to-r from-amber-400 via-orange-400 to-amber-500 text-black shadow-amber-500/25 active:scale-95 animate-firefly-glow hover:brightness-110 transition-all"
+              className="flex-1 btn-primary-white py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 font-bold shadow-lg active:scale-95 transition-all"
             >
-              <Send className="w-3.5 h-3.5 fill-black" />
+              <Send className="w-3.5 h-3.5 fill-current" />
               <span>Invite Friends (+400 PTS)</span>
             </button>
 
             <button
               onClick={handleCopy}
-              className="btn-secondary-dark p-3.5 rounded-2xl flex items-center justify-center hover:scale-105 active:scale-95 transition-all"
+              className="btn-secondary-dark p-3.5 rounded-2xl flex items-center justify-center active:scale-95 transition-all"
               title="Copy referral link"
             >
-              {copied ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
+              {copied ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
             </button>
           </div>
 

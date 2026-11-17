@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { formatINR, formatPoints } from '../../utils/formatters';
+import AddBioLinkModal from '../common/AddBioLinkModal';
 import {
   useWeeklyGraphQuery,
   useTasksQuery,
@@ -29,6 +30,7 @@ import {
 export default function HomeTab() {
   const { user, setUser, switchTab, showToast } = useGame();
   const [claimingCheckin, setClaimingCheckin] = useState(false);
+  const [showBioModal, setShowBioModal] = useState(false);
   const [promoCode, setPromoCode] = useState('');
 
   // TanStack Query caching & background refetch
@@ -60,6 +62,7 @@ export default function HomeTab() {
         sound.playPowerup();
         confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
         showToast(res.message, 'success');
+        setShowBioModal(false);
         refetchTasks();
         refetchGraph();
       }
@@ -227,7 +230,7 @@ export default function HomeTab() {
 
       {/* 2. DAILY CHECK-IN CARD (Matching Reference Image 2) */}
       <div className="glass-card rounded-[32px] p-6 transition-colors">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between mb-3">
           <div>
             <h3 className="text-base font-black text-neutral-900 dark:text-white">Daily check-in</h3>
             <span className="text-xs text-neutral-500 dark:text-neutral-400 font-medium">
@@ -236,7 +239,14 @@ export default function HomeTab() {
           </div>
 
           <button
-            onClick={handleClaimCheckin}
+            onClick={() => {
+              if (!checkInData?.canCheckIn) {
+                showToast('Already claimed today! Check back tomorrow.', 'info');
+                return;
+              }
+              triggerHaptic('light');
+              setShowBioModal(true);
+            }}
             disabled={!checkInData?.canCheckIn || claimingCheckin}
             className={`px-5 py-2.5 rounded-2xl text-xs font-black transition-all shadow-md ${
               checkInData?.canCheckIn
@@ -245,6 +255,23 @@ export default function HomeTab() {
             }`}
           >
             {checkInData?.canCheckIn ? `Claim +${streakDays[streakIndex].val}` : 'Claimed'}
+          </button>
+        </div>
+
+        {/* Telegram Bio Invite Link Prompt (Matching Reference Image 2 & 3) */}
+        <div className="mb-4 rounded-2xl bg-neutral-100 dark:bg-white/[0.04] border border-neutral-200 dark:border-white/5 px-3.5 py-2.5 flex items-center justify-between text-xs">
+          <span className="text-neutral-700 dark:text-neutral-300 font-medium">
+            Needs your invite link in your Telegram bio
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic('light');
+              setShowBioModal(true);
+            }}
+            className="font-bold underline text-black dark:text-white ml-1.5"
+          >
+            How?
           </button>
         </div>
 
@@ -297,53 +324,61 @@ export default function HomeTab() {
         </form>
       </div>
 
-      {/* 4. QUICK ACTIONS GRID (App Tasks, Play, Redeem, Invite) */}
-      <div className="grid grid-cols-4 gap-2.5">
+      {/* 4. QUICK ACTIONS GRID (App Tasks, Play, Redeem, Invite - Square Boxes, Full Text) */}
+      <div className="grid grid-cols-4 gap-2">
         <button
           onClick={() => {
             sessionStorage.setItem('preferred_task_cat', 'app_tasks');
             switchTab('tasks');
           }}
-          className="flex flex-col items-center justify-center p-3.5 rounded-3xl glass-card hover:border-emerald-500/30 hover:scale-[1.02] active:scale-95 transition-all shadow-sm group"
+          className="aspect-square flex flex-col items-center justify-between p-2.5 rounded-2xl glass-card border border-neutral-200 dark:border-white/10 active:scale-95 transition-all shadow-sm"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-500 mb-2 group-hover:scale-110 transition-transform">
-            <Smartphone className="w-5 h-5 animate-wiggle-hover" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-white/10 text-neutral-900 dark:text-white">
+            <Smartphone className="w-5 h-5" />
           </div>
-          <span className="text-xs font-black text-neutral-900 dark:text-white truncate max-w-full">App Tasks</span>
-          <span className="text-[10px] text-emerald-500 font-bold">Earn PTS</span>
+          <div className="text-center w-full">
+            <span className="text-[11px] font-black text-neutral-900 dark:text-white block leading-tight">App Tasks</span>
+            <span className="text-[9px] text-emerald-500 font-bold block leading-tight mt-0.5">Earn PTS</span>
+          </div>
         </button>
 
         <button
           onClick={() => switchTab('arena')}
-          className="flex flex-col items-center justify-center p-3.5 rounded-3xl glass-card hover:border-amber-500/30 hover:scale-[1.02] active:scale-95 transition-all shadow-sm group"
+          className="aspect-square flex flex-col items-center justify-between p-2.5 rounded-2xl glass-card border border-neutral-200 dark:border-white/10 active:scale-95 transition-all shadow-sm"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-amber-500/10 text-amber-500 mb-2 group-hover:scale-110 transition-transform">
-            <Gamepad2 className="w-5 h-5 animate-bounce-slow" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-white/10 text-neutral-900 dark:text-white">
+            <Gamepad2 className="w-5 h-5" />
           </div>
-          <span className="text-xs font-black text-neutral-900 dark:text-white">Play</span>
-          <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium">Asteroid</span>
+          <div className="text-center w-full">
+            <span className="text-[11px] font-black text-neutral-900 dark:text-white block leading-tight">Play</span>
+            <span className="text-[9px] text-neutral-500 dark:text-neutral-400 font-medium block leading-tight mt-0.5">Arena</span>
+          </div>
         </button>
 
         <button
           onClick={() => switchTab('tasks')}
-          className="flex flex-col items-center justify-center p-3.5 rounded-3xl glass-card hover:border-yellow-500/30 hover:scale-[1.02] active:scale-95 transition-all shadow-sm group"
+          className="aspect-square flex flex-col items-center justify-between p-2.5 rounded-2xl glass-card border border-neutral-200 dark:border-white/10 active:scale-95 transition-all shadow-sm"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-yellow-500/10 text-yellow-500 mb-2 group-hover:scale-110 transition-transform">
-            <Sparkles className="w-5 h-5 animate-pulse" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-white/10 text-neutral-900 dark:text-white">
+            <Sparkles className="w-5 h-5" />
           </div>
-          <span className="text-xs font-black text-neutral-900 dark:text-white">Redeem</span>
-          <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium">Tasks</span>
+          <div className="text-center w-full">
+            <span className="text-[11px] font-black text-neutral-900 dark:text-white block leading-tight">Redeem</span>
+            <span className="text-[9px] text-neutral-500 dark:text-neutral-400 font-medium block leading-tight mt-0.5">Promo</span>
+          </div>
         </button>
 
         <button
           onClick={() => switchTab('refer')}
-          className="flex flex-col items-center justify-center p-3.5 rounded-3xl glass-card hover:border-cyan-500/30 hover:scale-[1.02] active:scale-95 transition-all shadow-sm group"
+          className="aspect-square flex flex-col items-center justify-between p-2.5 rounded-2xl glass-card border border-neutral-200 dark:border-white/10 active:scale-95 transition-all shadow-sm"
         >
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-cyan-500/10 text-cyan-500 mb-2 group-hover:scale-110 transition-transform">
-            <Share2 className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100 dark:bg-white/10 text-neutral-900 dark:text-white">
+            <Share2 className="w-5 h-5" />
           </div>
-          <span className="text-xs font-black text-neutral-900 dark:text-white">Invite</span>
-          <span className="text-[10px] text-neutral-500 dark:text-neutral-400 font-medium">+400 each</span>
+          <div className="text-center w-full">
+            <span className="text-[11px] font-black text-neutral-900 dark:text-white block leading-tight">Invite</span>
+            <span className="text-[9px] text-neutral-500 dark:text-neutral-400 font-medium block leading-tight mt-0.5">+400 PTS</span>
+          </div>
         </button>
       </div>
 
@@ -406,6 +441,16 @@ export default function HomeTab() {
           </button>
         </div>
       </div>
+
+      {/* Add Bio Link Bottom Sheet (Matching Reference Image 3) */}
+      <AddBioLinkModal
+        isOpen={showBioModal}
+        onClose={() => setShowBioModal(false)}
+        onClaim={handleClaimCheckin}
+        claiming={claimingCheckin}
+        referralCode={user?.referralCode}
+        showToast={showToast}
+      />
     </div>
   );
 }

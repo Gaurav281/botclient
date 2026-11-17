@@ -5,6 +5,7 @@ import PlayerLayout from './components/layout/PlayerLayout';
 import AsteroidBlasterCanvas from './components/game/AsteroidBlasterCanvas';
 import GameOverModal from './components/game/GameOverModal';
 import BossVictoryModal from './components/game/BossVictoryModal';
+import AppLoadingScreen from './components/common/AppLoadingScreen';
 import Toast from './components/common/Toast';
 
 // Code-splitting with React.lazy for high performance
@@ -36,16 +37,7 @@ export default function App() {
   const { isPlaying, loading } = useGame();
 
   if (loading) {
-    return (
-      <div className="flex h-screen w-screen items-center justify-center bg-white dark:bg-[#070709] text-neutral-900 dark:text-white font-sans">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-neutral-300 dark:border-white/20 border-t-black dark:border-t-white" />
-          <span className="text-xs uppercase font-mono tracking-widest text-neutral-500 dark:text-neutral-400">
-            Initializing Fire Fly Play...
-          </span>
-        </div>
-      </div>
-    );
+    return <AppLoadingScreen />;
   }
 
   // Active in-game canvas view (100% viewport locked)
