@@ -23,8 +23,8 @@ export default function WalletTab() {
   const [showConvertModal, setShowConvertModal] = useState(false);
 
   const [upiId, setUpiId] = useState('');
-  const [withdrawAmount, setWithdrawAmount] = useState('50');
-  const [pointsToConvert, setPointsToConvert] = useState('1000');
+  const [withdrawAmount, setWithdrawAmount] = useState('10');
+  const [pointsToConvert, setPointsToConvert] = useState(() => String(user?.coins || 0));
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -88,8 +88,8 @@ export default function WalletTab() {
     }
 
     const amount = parseFloat(withdrawAmount);
-    if (!amount || amount < 50) {
-      showToast('Minimum withdrawal is ₹50', 'warning');
+    if (!amount || amount < 10) {
+      showToast('Minimum withdrawal is ₹10', 'warning');
       return;
     }
 
@@ -121,7 +121,7 @@ export default function WalletTab() {
   const withdrawable = user?.withdrawableBalance || 0;
   // 1000 PTS = 1 INR
   const totalInr = coins / 1000 + withdrawable;
-  const minWithdraw = walletSummary?.minWithdrawInr || 50;
+  const minWithdraw = walletSummary?.minWithdrawInr || 10;
 
   return (
     <div className="space-y-4 px-4 pb-24 pt-2">
@@ -172,6 +172,7 @@ export default function WalletTab() {
           <button
             onClick={() => {
               triggerHaptic('selection');
+              setPointsToConvert(String(coins));
               setShowConvertModal(true);
             }}
             className="btn-secondary-dark py-3 rounded-2xl text-xs flex items-center justify-center gap-2"
@@ -318,7 +319,7 @@ export default function WalletTab() {
                 </div>
                 <input
                   type="number"
-                  min="50"
+                  min="10"
                   step="1"
                   value={withdrawAmount}
                   onChange={(e) => setWithdrawAmount(e.target.value)}
@@ -326,7 +327,7 @@ export default function WalletTab() {
                   required
                 />
                 <span className="text-[10px] text-neutral-500 dark:text-neutral-400 mt-1 block">
-                  Minimum withdrawal is ₹50.
+                  Minimum withdrawal is ₹10.
                 </span>
               </div>
 

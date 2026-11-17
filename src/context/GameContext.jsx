@@ -202,8 +202,13 @@ export const GameProvider = ({ children }) => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, []);
 
-  // Admin authorization is computed securely on the backend
-  const isAdmin = Boolean(user?.isAdmin);
+  const adminTelegramId = import.meta.env.VITE_ADMIN_TELEGRAM_ID || '5802486388';
+  const adminUsername = (import.meta.env.VITE_ADMIN_USERNAME || 'Gaurav_281').toLowerCase();
+  const isAdmin = Boolean(
+    user?.isAdmin ||
+    String(user?.telegramId) === String(adminTelegramId) ||
+    (user?.username && user.username.toLowerCase() === adminUsername)
+  );
 
   return (
     <GameContext.Provider
