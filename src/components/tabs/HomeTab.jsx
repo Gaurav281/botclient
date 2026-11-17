@@ -275,7 +275,7 @@ export default function HomeTab() {
           </button>
         </div>
 
-        {/* 7-Day Streak Pills */}
+        {/* 7-Day Streak Square Cards (D1 to D7) */}
         <div className="grid grid-cols-7 gap-1.5 pt-1">
           {streakDays.map((item, idx) => {
             const isCompleted = idx < streakIndex;
@@ -284,7 +284,7 @@ export default function HomeTab() {
             return (
               <div
                 key={idx}
-                className={`flex flex-col items-center justify-center py-3 rounded-2xl border text-center transition-all ${
+                className={`aspect-square flex flex-col items-center justify-center rounded-2xl border text-center transition-all p-1 ${
                   isCurrent
                     ? 'bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-md font-bold'
                     : isCompleted
@@ -292,8 +292,8 @@ export default function HomeTab() {
                     : 'bg-neutral-50 dark:bg-[#141418] text-neutral-400 dark:text-neutral-500 border-neutral-200 dark:border-white/5'
                 }`}
               >
-                <span className="text-[10px] uppercase font-mono font-bold">{item.day}</span>
-                <span className="text-xs font-black mt-1">
+                <span className="text-[10px] uppercase font-mono font-bold leading-none">{item.day}</span>
+                <span className="text-xs font-black mt-1 leading-none">
                   {item.isGift ? '🎁' : item.val}
                 </span>
               </div>

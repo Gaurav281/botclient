@@ -58,6 +58,16 @@ export const api = {
   // Referral
   getReferral: () => request('/referral'),
 
+  // Tournaments
+  getTournaments: () => request('/tournaments'),
+  getTournamentDetails: (id) => request(`/tournaments/${id}`),
+  joinTournament: (id) => request(`/tournaments/${id}/join`, { method: 'POST' }),
+  submitTournamentScore: (id, score) => request(`/tournaments/${id}/score`, { method: 'POST', body: JSON.stringify({ score }) }),
+  getAdminTournaments: () => request('/tournaments/admin/all'),
+  createAdminTournament: (payload) => request('/tournaments/admin/create', { method: 'POST', body: JSON.stringify(payload) }),
+  declareAdminTournamentResults: (id) => request(`/tournaments/admin/${id}/declare-results`, { method: 'POST' }),
+  deleteAdminTournament: (id) => request(`/tournaments/admin/${id}`, { method: 'DELETE' }),
+
   // Admin Panel APIs
   getAdminOverview: () => request('/admin/overview'),
   getAdminWithdrawals: (status) => request(`/admin/withdrawals${status ? `?status=${status}` : ''}`),

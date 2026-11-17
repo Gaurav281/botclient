@@ -12,6 +12,8 @@ export const queryKeys = {
   adminWithdrawals: (status) => ['adminWithdrawals', status || 'all'],
   adminPromoCodes: ['adminPromoCodes'],
   adminCategories: ['adminCategories'],
+  tournaments: ['tournaments'],
+  adminTournaments: ['adminTournaments'],
 };
 
 // ======================== QUERIES ========================
@@ -229,6 +231,98 @@ export function useAdminToggleCategoryMutation() {
       queryClient.invalidateQueries({ queryKey: queryKeys.adminOverview });
       queryClient.invalidateQueries({ queryKey: queryKeys.tasks });
       showToast('Category updated successfully', 'success');
+    },
+    onError: (err) => {
+      showToast(err.message, 'error');
+    },
+  });
+}
+
+// ======================== TOURNAMENTS ========================
+
+export function useTournamentsQuery() {
+  const user = useAuthStore((s) => s.user);
+  return useQuery({
+    queryKey: queryKeys.tournaments,
+    queryFn: () => api.getTournaments(),
+    enabled: Boolean(user),
+    staleTime: 1000 * 15,
+  });
+}
+
+export function useAdminTournamentsQuery(enabled = true) {
+  return useQuery({
+    queryKey: queryKeys.adminTournaments,
+    queryFn: () => api.getAdminTournaments(),
+    enabled,
+    staleTime: 1000 * 15,
+  });
+}
+
+export function useJoinTournamentMutation() {
+  const queryClient = useQueryClient();
+  const setUser = useAuthStore((s) => s.setUser);
+  const showToast = useAuthStore((s) => s.showToast);
+
+  return useMutation({
+    mutationFn: (tournamentId) => api.joinTournament(tournamentId),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.tournaments });
+      if (data.user) {
+        setUser(data.user);
+      }
+      showToast(data.message || 'Joined tournament successfully!', 'success');
+    },
+    onError: (err) => {
+      showToast(err.message, 'error');
+    },
+  });
+}
+
+export function useCreateAdminTournamentMutation() {
+  const queryClient = useQueryClient();
+  const showToast = useAuthStore((s) => s.showToast);
+
+  return useMutation({
+    mutationFn: (payload) => api.createAdminTournament(payload),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTournaments });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tournaments });
+      showToast(data.message || 'Tournament created successfully!', 'success');
+    },
+    onError: (err) => {
+      showToast(err.message, 'error');
+    },
+  });
+}
+
+export function useDeclareAdminTournamentResultsMutation() {
+  const queryClient = useQueryClient();
+  const showToast = useAuthStore((s) => s.showToast);
+
+  return useMutation({
+    mutationFn: (id) => api.declareAdminTournamentResults(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTournaments });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tournaments });
+      showToast(data.message || 'Results declared and prizes distributed!', 'success');
+    },
+    onError: (err) => {
+      showToast(err.message, 'error');
+    },
+  });
+}
+
+export function useDeleteAdminTournamentMutation() {
+  const queryClient = useQueryClient();
+  const showToast = useAuthStore((s) => s.showToast);
+
+  return useMutation({
+    mutationFn: (id) => api.deleteAdminTournament(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.adminTournaments });
+      queryClient.invalidateQueries({ queryKey: queryKeys.tournaments });
+      showToast(data.message || 'Tournament deleted successfully', 'success');
     },
     onError: (err) => {
       showToast(err.message, 'error');

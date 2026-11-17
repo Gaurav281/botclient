@@ -5,7 +5,18 @@ import { triggerHaptic } from '../../services/telegram';
 import AdsterraMinimalAd from '../common/AdsterraMinimalAd';
 
 export default function GameOverModal() {
-  const { showGameOverModal, setShowGameOverModal, lastGameResult, user, launchGame, difficulty, switchTab, setIsPlaying } = useGame();
+  const {
+    showGameOverModal,
+    setShowGameOverModal,
+    lastGameResult,
+    user,
+    launchGame,
+    difficulty,
+    switchTab,
+    setIsPlaying,
+    activeTournament,
+    setActiveTournament,
+  } = useGame();
 
   if (!showGameOverModal) return null;
 
@@ -21,16 +32,26 @@ export default function GameOverModal() {
     triggerHaptic('medium');
     setShowGameOverModal(false);
     setIsPlaying(false);
-    setTimeout(() => {
-      launchGame(difficulty);
-    }, 50);
+    if (activeTournament) {
+      setActiveTournament(null);
+      switchTab('tasks');
+    } else {
+      setTimeout(() => {
+        launchGame(difficulty);
+      }, 50);
+    }
   };
 
   const handleGoHome = () => {
     triggerHaptic('light');
     setShowGameOverModal(false);
     setIsPlaying(false);
-    switchTab('arena');
+    if (activeTournament) {
+      setActiveTournament(null);
+      switchTab('tasks');
+    } else {
+      switchTab('arena');
+    }
   };
 
   return (
@@ -41,8 +62,12 @@ export default function GameOverModal() {
           <Trophy className="w-7 h-7 text-yellow-500 dark:text-yellow-400" />
         </div>
 
-        <h3 className="text-xl font-black tracking-tight text-neutral-900 dark:text-white">Mission Debrief</h3>
-        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 font-medium">Your Asteroid Blaster battle results</p>
+        <h3 className="text-xl font-black tracking-tight text-neutral-900 dark:text-white">
+          {activeTournament ? 'Tournament Match Complete' : 'Mission Debrief'}
+        </h3>
+        <p className="mt-1 text-xs text-neutral-500 dark:text-neutral-400 font-medium">
+          {activeTournament ? `${activeTournament.title} • Score Submitted!` : 'Your Asteroid Blaster battle results'}
+        </p>
 
         {/* Stats Grid */}
         <div className="my-5 grid grid-cols-3 gap-2">
@@ -82,7 +107,7 @@ export default function GameOverModal() {
             className="w-full btn-secondary-dark py-3 rounded-2xl text-xs flex items-center justify-center gap-2"
           >
             <Home className="w-4 h-4" />
-            <span>Back to Arena</span>
+            <span>{activeTournament ? 'Back to Tournaments' : 'Back to Arena'}</span>
           </button>
         </div>
       </div>

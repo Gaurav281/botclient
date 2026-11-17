@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { api, setActiveTelegramId } from '../services/api';
+import { useAuthStore } from '../stores/authStore';
 import {
   initTelegramApp,
   getTelegramInitData,
@@ -25,6 +26,7 @@ export const GameProvider = ({ children }) => {
   const [showBossVictoryModal, setShowBossVictoryModal] = useState(false);
   const [showProfileModal, setShowProfileModal] = useState(false);
   const [showAdminModal, setShowAdminModal] = useState(false);
+  const [activeTournament, setActiveTournament] = useState(null);
   const [lastGameResult, setLastGameResult] = useState(null);
   const [toast, setToast] = useState(null);
 
@@ -109,6 +111,7 @@ export const GameProvider = ({ children }) => {
       if (loginRes.success && loginRes.user) {
         setActiveTelegramId(loginRes.user.telegramId);
         setUser(loginRes.user);
+        useAuthStore.getState().setUser(loginRes.user);
         sound.setEnabled(loginRes.user.soundEnabled ?? true);
       }
     } catch (err) {
@@ -129,6 +132,7 @@ export const GameProvider = ({ children }) => {
       const res = await api.getMe();
       if (res.success && res.user) {
         setUser(res.user);
+        useAuthStore.getState().setUser(res.user);
       }
     } catch (err) {
       console.warn('Failed refreshing user data:', err);
@@ -147,6 +151,7 @@ export const GameProvider = ({ children }) => {
     }
 
     setDifficulty(chosenDifficulty);
+    setActiveTournament(null);
 
     // Check if user chose "Do not show rules again"
     if (!user.doNotShowRules) {
@@ -155,6 +160,14 @@ export const GameProvider = ({ children }) => {
       setIsPlaying(true);
     }
   }, [user, showToast]);
+
+  // Launch Tournament Match specifically
+  const launchTournamentMatch = useCallback((tournament) => {
+    if (!user) return;
+    setActiveTournament(tournament);
+    setDifficulty('normal');
+    setIsPlaying(true);
+  }, [user]);
 
   const confirmStartGame = useCallback(async () => {
     try {
@@ -173,6 +186,18 @@ export const GameProvider = ({ children }) => {
     setLastGameResult(resultData);
 
     try {
+      if (activeTournament) {
+        try {
+          const tRes = await api.submitTournamentScore(activeTournament._id, resultData.score);
+          if (tRes.success) {
+            showToast(`Tournament Score: ${resultData.score} submitted!`, 'success');
+          }
+        } catch (tErr) {
+          console.warn('Error submitting tournament score:', tErr);
+          showToast(tErr.message || 'Error submitting tournament score', 'error');
+        }
+      }
+
       const res = await api.finishGame({
         score: resultData.score,
         enemiesKilled: resultData.kills,
@@ -182,6 +207,7 @@ export const GameProvider = ({ children }) => {
 
       if (res.success && res.user) {
         setUser(res.user);
+        useAuthStore.getState().setUser(res.user);
       }
 
       if (resultData.bossKilled) {
@@ -194,7 +220,7 @@ export const GameProvider = ({ children }) => {
       showToast('Error saving score: ' + err.message, 'error');
       setShowGameOverModal(true);
     }
-  }, [difficulty, showToast]);
+  }, [activeTournament, difficulty, showToast]);
 
   const navigate = useNavigate();
   const switchTab = useCallback((tab) => {
@@ -248,6 +274,9 @@ export const GameProvider = ({ children }) => {
         setShowProfileModal,
         showAdminModal,
         setShowAdminModal,
+        activeTournament,
+        setActiveTournament,
+        launchTournamentMatch,
         lastGameResult,
         launchGame,
         confirmStartGame,

@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../../context/GameContext';
+import { useAuthStore } from '../../stores/authStore';
+import { api } from '../../services/api';
+import { showAdsgramRewardAd } from '../../services/ads';
 import { triggerHaptic } from '../../services/telegram';
 import { sound } from '../../services/audio';
 import {
@@ -19,18 +22,22 @@ import {
   Sparkles,
   Flame,
   CheckCircle2,
+  Edit2,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { formatINR, formatPoints, formatISTTime } from '../../utils/formatters';
 
 export default function WalletTab() {
-  const { user, showToast } = useGame();
+  const { user, setUser, showToast } = useGame();
   const { data: walletSummary, isLoading } = useWalletSummaryQuery();
   const convertMutation = useConvertPointsMutation();
   const withdrawMutation = useWithdrawMutation();
 
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showConvertModal, setShowConvertModal] = useState(false);
+  const [showEditUpiModal, setShowEditUpiModal] = useState(false);
+  const [newUpiInput, setNewUpiInput] = useState('');
+  const [savingUpi, setSavingUpi] = useState(false);
 
   const [upiId, setUpiId] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('10');
@@ -39,8 +46,35 @@ export default function WalletTab() {
   useEffect(() => {
     if (walletSummary?.savedUpiId) {
       setUpiId(walletSummary.savedUpiId);
+    } else if (user?.savedUpiId) {
+      setUpiId(user.savedUpiId);
     }
-  }, [walletSummary?.savedUpiId]);
+  }, [walletSummary?.savedUpiId, user?.savedUpiId]);
+
+  // Save new UPI ID
+  const handleSaveUpi = async (e) => {
+    e.preventDefault();
+    const cleanUpi = newUpiInput.trim();
+    if (!cleanUpi || !cleanUpi.includes('@')) {
+      showToast('Please enter a valid UPI ID (e.g. name@okhdfcbank)', 'error');
+      return;
+    }
+    setSavingUpi(true);
+    try {
+      const res = await api.updatePreferences({ savedUpiId: cleanUpi });
+      if (res.success && res.user) {
+        setUser(res.user);
+        useAuthStore.getState().setUser(res.user);
+        setUpiId(cleanUpi);
+        showToast('UPI ID saved successfully!', 'success');
+        setShowEditUpiModal(false);
+      }
+    } catch (err) {
+      showToast(err.message || 'Error saving UPI ID', 'error');
+    } finally {
+      setSavingUpi(false);
+    }
+  };
 
   // Convert Points to Withdrawable INR (Even 1 PTS allowed: 1000 PTS = 1 INR)
   const handleConvertPoints = async (e) => {
@@ -65,10 +99,11 @@ export default function WalletTab() {
     }
   };
 
-  // Submit Withdrawal Request (with UPI ID)
+  // Submit Withdrawal Request (with UPI ID and mandatory Adsgram reward ad)
   const handleWithdrawSubmit = async (e) => {
     e.preventDefault();
-    if (!upiId.trim() || !upiId.includes('@')) {
+    const finalUpi = (upiId || user?.savedUpiId || '').trim();
+    if (!finalUpi || !finalUpi.includes('@')) {
       showToast('Please enter a valid UPI ID (e.g. name@okhdfcbank or 9876543210@paytm)', 'error');
       return;
     }
@@ -85,14 +120,19 @@ export default function WalletTab() {
     }
 
     triggerHaptic('medium');
-    try {
-      await withdrawMutation.mutateAsync({ upiId: upiId.trim(), amountInr: amount });
-      sound.playPowerup();
-      confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
-      setShowWithdrawModal(false);
-    } catch (err) {
-      // Toast handled by mutation
-    }
+
+    // Adsgram reward ad required before submitting withdrawal request
+    showToast('Watch an ad to complete your withdrawal request...', 'info');
+    await showAdsgramRewardAd(async () => {
+      try {
+        await withdrawMutation.mutateAsync({ upiId: finalUpi, amountInr: amount });
+        sound.playPowerup();
+        confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+        setShowWithdrawModal(false);
+      } catch (err) {
+        // Toast handled by mutation
+      }
+    });
   };
 
   const coins = user?.coins || 0;
@@ -181,29 +221,36 @@ export default function WalletTab() {
         <span className="text-neutral-500 dark:text-neutral-400">Min. withdraw ₹{minWithdraw}</span>
       </div>
 
-      {/* 3. Saved UPI ID Card */}
-      {user?.savedUpiId && (
-        <div className="glass-card rounded-2xl p-3.5 flex items-center justify-between border border-neutral-200 dark:border-white/5 transition-colors">
-          <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-200 dark:bg-white/10 text-neutral-900 dark:text-white">
-              <CreditCard className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block">Saved UPI ID</span>
-              <span className="text-xs font-semibold text-neutral-900 dark:text-white font-mono">{user.savedUpiId}</span>
-            </div>
+      {/* 3. Saved UPI ID Card (Click to edit & auto-used on withdraw) */}
+      <div
+        onClick={() => {
+          triggerHaptic('light');
+          setNewUpiInput(user?.savedUpiId || upiId || '');
+          setShowEditUpiModal(true);
+        }}
+        className="glass-card rounded-2xl p-3.5 flex items-center justify-between border border-neutral-200 dark:border-white/5 hover:border-white/20 transition-all cursor-pointer active:scale-[0.99]"
+      >
+        <div className="flex items-center gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-200 dark:bg-white/10 text-neutral-900 dark:text-white">
+            <CreditCard className="w-4 h-4" />
           </div>
-          <button
-            onClick={() => {
-              setUpiId(user.savedUpiId);
-              setShowWithdrawModal(true);
-            }}
-            className="text-xs font-bold text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white"
-          >
-            Use
-          </button>
+          <div>
+            <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block">
+              Saved UPI ID (Tap to Edit)
+            </span>
+            <span className="text-xs font-semibold text-neutral-900 dark:text-white font-mono">
+              {user?.savedUpiId || 'No UPI ID saved — Tap to add'}
+            </span>
+          </div>
         </div>
-      )}
+        <button
+          type="button"
+          className="text-xs font-bold text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white px-2 py-1 rounded-lg bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 flex items-center gap-1"
+        >
+          <Edit2 className="w-3 h-3" />
+          <span>{user?.savedUpiId ? 'Change' : '+ Add'}</span>
+        </button>
+      </div>
 
       {/* 4. VERIFIED PAYOUT PROOFS SECTION (Replaces Recent Activity) */}
       <div className="glass-card rounded-3xl p-5 relative overflow-hidden transition-colors border border-emerald-500/20 shadow-lg">
@@ -218,9 +265,8 @@ export default function WalletTab() {
             <div>
               <h3 className="text-sm font-black text-neutral-900 dark:text-white tracking-tight flex items-center gap-1.5">
                 <span>Verified Payout Proofs</span>
-                <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-ping" />
+                <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
               </h3>
-              <p className="text-[10px] text-neutral-500 dark:text-neutral-400 font-mono">100% Genuine • Live Receipts</p>
             </div>
           </div>
 
@@ -434,6 +480,50 @@ export default function WalletTab() {
                   {convertMutation.isPending ? 'Converting...' : 'Convert to INR'}
                 </button>
               </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* EDIT UPI MODAL */}
+      {showEditUpiModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="w-full max-w-sm rounded-3xl bg-white dark:bg-[#121216] border border-neutral-200 dark:border-white/10 p-5 text-neutral-900 dark:text-white shadow-2xl relative">
+            <button
+              onClick={() => setShowEditUpiModal(false)}
+              className="absolute right-4 top-4 text-neutral-400 hover:text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="flex items-center gap-2 mb-1">
+              <CreditCard className="w-4 h-4 text-emerald-500" />
+              <h3 className="text-sm font-black">Set Saved UPI ID</h3>
+            </div>
+            <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-4">
+              This UPI ID will be used automatically when requesting payouts.
+            </p>
+
+            <form onSubmit={handleSaveUpi} className="space-y-3">
+              <div>
+                <label className="text-[11px] text-neutral-400 block mb-1">Enter your UPI ID</label>
+                <input
+                  type="text"
+                  placeholder="e.g. name@okhdfcbank or 9876543210@paytm"
+                  value={newUpiInput}
+                  onChange={(e) => setNewUpiInput(e.target.value)}
+                  className="w-full rounded-2xl bg-neutral-100 dark:bg-black/50 border border-neutral-200 dark:border-white/10 px-3.5 py-3 text-xs text-neutral-900 dark:text-white font-mono focus:outline-none focus:border-white/30"
+                  required
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={savingUpi}
+                className="w-full py-3 rounded-2xl bg-black text-white dark:bg-white dark:text-black font-black text-xs uppercase tracking-wider hover:opacity-90 active:scale-95 transition-all shadow-md"
+              >
+                {savingUpi ? 'Saving...' : 'Save UPI ID'}
+              </button>
             </form>
           </div>
         </div>

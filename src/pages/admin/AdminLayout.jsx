@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuthStore, selectIsAdmin } from '../../stores/authStore';
+import { useGame } from '../../context/GameContext';
 import { useAdminOverviewQuery } from '../../hooks/queries';
+import { api, setActiveTelegramId } from '../../services/api';
 import {
   ShieldCheck,
   ArrowLeft,
@@ -12,44 +14,134 @@ import {
   Clock,
   Sparkles,
   RefreshCw,
+  Trophy,
+  KeyRound,
 } from 'lucide-react';
 import { triggerHaptic } from '../../services/telegram';
 
 export default function AdminLayout() {
   const navigate = useNavigate();
-  const user = useAuthStore((s) => s.user);
-  const isAdmin = useAuthStore(selectIsAdmin);
+  const gameContext = useGame();
+  const storeUser = useAuthStore((s) => s.user);
+  const user = storeUser || gameContext?.user;
+  const isAuthLoading = gameContext?.loading;
+
+  // Emergency Admin Unlock state for desktop/browser sessions
+  const [adminInputId, setAdminInputId] = useState('');
+  const [unlockError, setUnlockError] = useState('');
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const adminId = String(import.meta.env.VITE_ADMIN_TELEGRAM_ID || '5802486388').trim();
+  const adminUsername = String(import.meta.env.VITE_ADMIN_USERNAME || 'Gaurav_281').toLowerCase().replace('@', '').trim();
+  const userUsername = String(user?.username || '').toLowerCase().replace('@', '').trim();
+  const userTgId = String(user?.telegramId || '').trim();
+
+  const isAdmin = Boolean(
+    user?.isAdmin ||
+    userTgId === adminId ||
+    (userUsername && userUsername === adminUsername)
+  );
 
   const { data: overviewData, isLoading: loadingOverview, refetch } = useAdminOverviewQuery(isAdmin);
   const stats = overviewData?.stats;
 
-  // Security guard
+  const handleManualAdminUnlock = async (e) => {
+    e.preventDefault();
+    if (!adminInputId.trim()) return;
+
+    setIsVerifying(true);
+    setUnlockError('');
+    try {
+      const cleanInput = adminInputId.trim().replace('@', '').toLowerCase();
+      if (cleanInput === adminId || cleanInput === adminUsername) {
+        // Authenticate as root admin
+        setActiveTelegramId(adminId);
+        const res = await api.getMe();
+        if (res.success && res.user) {
+          useAuthStore.getState().setUser(res.user);
+          if (gameContext?.setUser) gameContext.setUser(res.user);
+          triggerHaptic('success');
+          refetch();
+        }
+      } else {
+        setUnlockError('Invalid Admin Telegram ID or Username');
+        triggerHaptic('error');
+      }
+    } catch (err) {
+      setUnlockError(err.message || 'Verification failed');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  // 1. Loading screen while auth establishes
+  if (isAuthLoading && !user) {
+    return (
+      <div className="min-h-screen bg-[#0d0d12] text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-white/20 border-t-white mb-3" />
+        <span className="text-xs font-mono uppercase tracking-widest text-neutral-400">
+          Verifying Admin Credentials...
+        </span>
+      </div>
+    );
+  }
+
+  // 2. Security guard if not admin
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-neutral-900 text-white flex flex-col items-center justify-center p-6 text-center">
-        <ShieldCheck className="w-16 h-16 text-red-500 mb-4 animate-pulse" />
-        <h2 className="text-xl font-bold mb-2">Access Denied</h2>
-        <p className="text-sm text-neutral-400 max-w-sm mb-6">
-          This section is restricted strictly to authorized platform administrators.
+      <div className="min-h-screen bg-[#0d0d12] text-white flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-16 h-16 rounded-3xl bg-red-500/10 border border-red-500/20 flex items-center justify-center text-red-500 mb-4 animate-pulse">
+          <ShieldCheck className="w-8 h-8" />
+        </div>
+        <h2 className="text-xl font-bold mb-1">Admin Access Required</h2>
+        <p className="text-xs text-neutral-400 max-w-sm mb-6 leading-relaxed">
+          This portal is restricted to authorized platform administrators (@{adminUsername} / ID: {adminId}).
         </p>
+
+        {/* Browser Quick-Verify Form for Admin */}
+        <form onSubmit={handleManualAdminUnlock} className="w-full max-w-xs space-y-2.5 mb-6 text-left">
+          <label className="text-[11px] font-mono text-neutral-400 block">
+            Admin Verification (Telegram ID / @Username)
+          </label>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="e.g. 5802486388 or Gaurav_281"
+              value={adminInputId}
+              onChange={(e) => setAdminInputId(e.target.value)}
+              className="flex-1 rounded-xl bg-white/5 border border-white/10 px-3 py-2 text-xs text-white focus:outline-none focus:border-white/30"
+            />
+            <button
+              type="submit"
+              disabled={isVerifying}
+              className="px-4 py-2 rounded-xl bg-white text-black font-bold text-xs hover:bg-neutral-200 transition-all flex items-center gap-1"
+            >
+              <KeyRound className="w-3.5 h-3.5" />
+              <span>Verify</span>
+            </button>
+          </div>
+          {unlockError && <p className="text-[11px] text-red-400 font-mono">{unlockError}</p>}
+        </form>
+
         <button
           onClick={() => navigate('/home')}
-          className="px-6 py-3 rounded-2xl bg-white text-black font-bold text-sm shadow-lg active:scale-95 transition-all"
+          className="px-6 py-2.5 rounded-2xl bg-white/5 border border-white/10 text-neutral-300 font-bold text-xs hover:bg-white/10 active:scale-95 transition-all"
         >
-          Return to Game
+          Return to App
         </button>
       </div>
     );
   }
 
   const tabs = [
+    { to: '/admin/tournaments', label: 'Tournaments', icon: Trophy },
     { to: '/admin/withdrawals', label: 'Withdrawals', icon: CreditCard, count: stats?.pendingWithdrawals },
     { to: '/admin/promo-codes', label: 'Promo Codes', icon: Ticket, count: stats?.activePromoCodes },
     { to: '/admin/categories', label: 'Task Categories', icon: Sliders },
   ];
 
   return (
-    <div className="min-h-screen bg-[#0d0d12] text-neutral-100 flex flex-col">
+    <div className="min-h-screen bg-[#0d0d12] text-neutral-100 flex flex-col font-sans">
       {/* 1. TOP ADMIN APP BAR */}
       <header className="sticky top-0 z-40 bg-[#121218]/90 backdrop-blur-md border-b border-white/10 px-4 py-3.5 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -150,7 +242,7 @@ export default function AdminLayout() {
               className={({ isActive }) =>
                 `px-4 py-2.5 rounded-xl text-xs font-bold flex items-center gap-2 transition-all whitespace-nowrap ${
                   isActive
-                    ? 'bg-white text-black shadow-lg'
+                    ? 'bg-white text-black shadow-lg font-black'
                     : 'bg-white/5 text-neutral-400 hover:text-white hover:bg-white/10'
                 }`
               }

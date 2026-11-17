@@ -16,6 +16,7 @@ const ReferPage = React.lazy(() => import('./pages/ReferPage'));
 const WalletPage = React.lazy(() => import('./pages/WalletPage'));
 
 const AdminLayout = React.lazy(() => import('./pages/admin/AdminLayout'));
+const AdminTournamentsPage = React.lazy(() => import('./pages/admin/AdminTournamentsPage'));
 const AdminWithdrawalsPage = React.lazy(() => import('./pages/admin/AdminWithdrawalsPage'));
 const AdminPromoCodesPage = React.lazy(() => import('./pages/admin/AdminPromoCodesPage'));
 const AdminCategoriesPage = React.lazy(() => import('./pages/admin/AdminCategoriesPage'));
@@ -67,7 +68,8 @@ export default function App() {
 
         {/* Dedicated Full Admin Console Pages */}
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Navigate to="withdrawals" replace />} />
+          <Route index element={<Navigate to="tournaments" replace />} />
+          <Route path="tournaments" element={<AdminTournamentsPage />} />
           <Route path="withdrawals" element={<AdminWithdrawalsPage />} />
           <Route path="promo-codes" element={<AdminPromoCodesPage />} />
           <Route path="categories" element={<AdminCategoriesPage />} />

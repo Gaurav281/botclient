@@ -125,11 +125,14 @@ export const useAuthStore = create((set, get) => ({
 // Helper selector for Admin check
 export const selectIsAdmin = (state) => {
   const user = state.user;
-  const adminId = import.meta.env.VITE_ADMIN_TELEGRAM_ID || '5802486388';
-  const adminUsername = (import.meta.env.VITE_ADMIN_USERNAME || 'Gaurav_281').toLowerCase();
+  const adminId = String(import.meta.env.VITE_ADMIN_TELEGRAM_ID || '5802486388').trim();
+  const adminUsername = String(import.meta.env.VITE_ADMIN_USERNAME || 'Gaurav_281').toLowerCase().replace('@', '').trim();
+  const userUsername = String(user?.username || '').toLowerCase().replace('@', '').trim();
+  const userTgId = String(user?.telegramId || '').trim();
+
   return Boolean(
     user?.isAdmin ||
-    String(user?.telegramId) === String(adminId) ||
-    (user?.username && user.username.toLowerCase() === adminUsername)
+    userTgId === adminId ||
+    (userUsername && userUsername === adminUsername)
   );
 };

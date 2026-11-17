@@ -22,6 +22,9 @@ export default function BottomNavbar() {
 
   const handleNav = (path) => {
     triggerHaptic('selection');
+    if (path === '/tasks') {
+      sessionStorage.setItem('preferred_task_cat', 'tournaments');
+    }
     navigate(path);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
