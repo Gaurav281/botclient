@@ -406,49 +406,53 @@ export default function AsteroidBlasterCanvas() {
         e.x += Math.sin(currentTime * 0.003 + e.wobbleOffset) * 0.9;
 
         // Enemy firing - ALL enemies AIM at user space craft!
+        // If 30% distance is remaining to reach bottom (y >= height * 0.70), do NOT fire because it's too difficult to dodge
         e.shootCooldown -= dt;
+        const canShoot = e.y < height * 0.70;
         if (e.shootCooldown <= 0) {
           e.shootCooldown = Math.random() * 1.8 + 1.2;
-          const angleToPlayer = Math.atan2(state.player.y - e.y, state.player.x - e.x);
-          const bulletSpeed = 5.2;
+          if (canShoot) {
+            const angleToPlayer = Math.atan2(state.player.y - e.y, state.player.x - e.x);
+            const bulletSpeed = 5.2;
 
-          if (e.type === 'scout') {
-            // Type 1 (+10 PTS): 1 aimed bullet
-            state.enemyBullets.push({
-              x: e.x,
-              y: e.y + 12,
-              vx: Math.cos(angleToPlayer) * bulletSpeed,
-              vy: Math.sin(angleToPlayer) * bulletSpeed,
-              color: '#f43f5e',
-            });
-            sound.playEnemyLaser();
-          } else if (e.type === 'interceptor') {
-            // Type 2 (+20 PTS): 1 fast aimed bullet
-            state.enemyBullets.push({
-              x: e.x,
-              y: e.y + 12,
-              vx: Math.cos(angleToPlayer) * (bulletSpeed + 0.6),
-              vy: Math.sin(angleToPlayer) * (bulletSpeed + 0.6),
-              color: '#fb7185',
-            });
-            sound.playEnemyLaser();
-          } else if (e.type === 'heavy') {
-            // Type 3 (+30 PTS): 2 aimed bullets from left & right wings
-            state.enemyBullets.push({
-              x: e.x - 8,
-              y: e.y + 12,
-              vx: Math.cos(angleToPlayer - 0.08) * bulletSpeed,
-              vy: Math.sin(angleToPlayer - 0.08) * bulletSpeed,
-              color: '#e11d48',
-            });
-            state.enemyBullets.push({
-              x: e.x + 8,
-              y: e.y + 12,
-              vx: Math.cos(angleToPlayer + 0.08) * bulletSpeed,
-              vy: Math.sin(angleToPlayer + 0.08) * bulletSpeed,
-              color: '#e11d48',
-            });
-            sound.playEnemyLaser();
+            if (e.type === 'scout') {
+              // Type 1 (+10 PTS): 1 aimed bullet
+              state.enemyBullets.push({
+                x: e.x,
+                y: e.y + 12,
+                vx: Math.cos(angleToPlayer) * bulletSpeed,
+                vy: Math.sin(angleToPlayer) * bulletSpeed,
+                color: '#f43f5e',
+              });
+              sound.playEnemyLaser();
+            } else if (e.type === 'interceptor') {
+              // Type 2 (+20 PTS): 1 fast aimed bullet
+              state.enemyBullets.push({
+                x: e.x,
+                y: e.y + 12,
+                vx: Math.cos(angleToPlayer) * (bulletSpeed + 0.6),
+                vy: Math.sin(angleToPlayer) * (bulletSpeed + 0.6),
+                color: '#fb7185',
+              });
+              sound.playEnemyLaser();
+            } else if (e.type === 'heavy') {
+              // Type 3 (+30 PTS): 2 aimed bullets from left & right wings
+              state.enemyBullets.push({
+                x: e.x - 8,
+                y: e.y + 12,
+                vx: Math.cos(angleToPlayer - 0.08) * bulletSpeed,
+                vy: Math.sin(angleToPlayer - 0.08) * bulletSpeed,
+                color: '#e11d48',
+              });
+              state.enemyBullets.push({
+                x: e.x + 8,
+                y: e.y + 12,
+                vx: Math.cos(angleToPlayer + 0.08) * bulletSpeed,
+                vy: Math.sin(angleToPlayer + 0.08) * bulletSpeed,
+                color: '#e11d48',
+              });
+              sound.playEnemyLaser();
+            }
           }
         }
 

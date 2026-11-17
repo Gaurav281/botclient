@@ -52,7 +52,7 @@ export default function Header() {
           className="flex items-center gap-3 text-left group transition-all"
         >
           <div className="relative">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-cyan-400 to-indigo-500 font-black text-black text-xl shadow-md group-hover:scale-105 transition-transform">
+            <div className="avatar-header flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-tr from-cyan-400 to-indigo-500 font-black text-black text-xl shadow-md group-hover:scale-105 transition-transform">
               {initial}
             </div>
           </div>

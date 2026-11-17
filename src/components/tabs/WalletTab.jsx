@@ -31,7 +31,7 @@ import confetti from 'canvas-confetti';
 import { formatINR, formatPoints, formatISTTime, formatISTDateTime } from '../../utils/formatters';
 
 export default function WalletTab() {
-  const { user, setUser, showToast } = useGame();
+  const { user, setUser, showToast, refreshUser } = useGame();
   const { data: walletSummary, isLoading } = useWalletSummaryQuery();
   const { data: payoutHistoryData, isLoading: loadingPayouts, refetch: refetchPayoutHistory } = usePayoutHistoryQuery();
   const withdrawMutation = useWithdrawMutation();
@@ -111,13 +111,29 @@ export default function WalletTab() {
     // Adsgram reward ad required before submitting withdrawal request
     showToast('Watch an ad to complete your withdrawal request...', 'info');
     await showAdsgramRewardAd(async () => {
+      // Optimistically deduct withdraw amount from withdrawable and coins immediately!
+      setUser((prev) => {
+        const deductWithdrawable = Math.min(prev?.withdrawableBalance || 0, amount);
+        const remInr = amount - deductWithdrawable;
+        const deductPts = Math.round(remInr * 1000);
+        return {
+          ...prev,
+          withdrawableBalance: Math.max(0, (prev?.withdrawableBalance || 0) - deductWithdrawable),
+          coins: Math.max(0, (prev?.coins || 0) - deductPts),
+        };
+      });
+
       try {
-        await withdrawMutation.mutateAsync({ upiId: finalUpi, amountInr: amount });
+        const res = await withdrawMutation.mutateAsync({ upiId: finalUpi, amountInr: amount });
+        if (res?.user) {
+          setUser(res.user);
+        }
         sound.playPowerup();
         confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
         setShowWithdrawModal(false);
       } catch (err) {
-        // Toast handled by mutation
+        // Revert on error
+        refreshUser();
       }
     });
   };

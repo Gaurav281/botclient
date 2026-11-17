@@ -16,7 +16,7 @@ const GameContext = createContext(null);
 export const useGame = () => useContext(GameContext);
 
 export const GameProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUserState] = useState(() => useAuthStore.getState().user);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('home'); // 'home', 'tasks', 'arena', 'refer', 'wallet'
   const [isPlaying, setIsPlaying] = useState(false);
@@ -29,6 +29,26 @@ export const GameProvider = ({ children }) => {
   const [activeTournament, setActiveTournament] = useState(null);
   const [lastGameResult, setLastGameResult] = useState(null);
   const [toast, setToast] = useState(null);
+
+  // Synchronize user updates bidirectionally with Zustand authStore
+  const setUser = useCallback((newUser) => {
+    setUserState((prev) => {
+      const nextUser = typeof newUser === 'function' ? newUser(prev) : newUser;
+      if (nextUser) {
+        useAuthStore.getState().setUser(nextUser);
+      }
+      return nextUser;
+    });
+  }, []);
+
+  useEffect(() => {
+    const unsub = useAuthStore.subscribe((state) => {
+      if (state.user) {
+        setUserState(state.user);
+      }
+    });
+    return unsub;
+  }, []);
 
   // Theme Management (Dark / Light / Purple Mode)
   const [theme, setTheme] = useState(() => {

@@ -21,7 +21,7 @@ import confetti from 'canvas-confetti';
 import { formatPoints } from '../../utils/formatters';
 
 export default function TasksTab() {
-  const { user, setUser, showToast, launchTournamentMatch } = useGame();
+  const { user, setUser, showToast, refreshUser, launchTournamentMatch } = useGame();
   const { data: tasksData, isLoading: loadingTasks, refetch: refetchTasks } = useTasksQuery();
   const { data: tournamentsData, isLoading: loadingTourneys, refetch: refetchTourneys } = useTournamentsQuery();
   const joinTournamentMutation = useJoinTournamentMutation();
@@ -64,13 +64,24 @@ export default function TasksTab() {
 
     triggerHaptic('medium');
     setJoiningId(tournament._id);
+
+    // Optimistically deduct entry fee immediately so UI updates with ZERO delay!
+    setUser((prev) => ({
+      ...prev,
+      coins: Math.max(0, (prev?.coins || 0) - tournament.entryFee),
+    }));
+
     try {
-      await joinTournamentMutation.mutateAsync(tournament._id);
+      const res = await joinTournamentMutation.mutateAsync(tournament._id);
+      if (res?.user) {
+        setUser(res.user);
+      }
       sound.playPowerup();
       confetti({ particleCount: 60, spread: 70, origin: { y: 0.6 } });
       refetchTourneys();
     } catch (err) {
-      // toast handled in mutation
+      // Revert if error
+      refreshUser();
     } finally {
       setJoiningId(null);
     }

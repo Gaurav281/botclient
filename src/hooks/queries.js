@@ -280,6 +280,8 @@ export function useJoinTournamentMutation() {
     mutationFn: (tournamentId) => api.joinTournament(tournamentId),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: queryKeys.tournaments });
+      queryClient.invalidateQueries({ queryKey: queryKeys.walletSummary });
+      queryClient.invalidateQueries({ queryKey: queryKeys.weeklyGraph });
       if (data.user) {
         setUser(data.user);
       }

@@ -29,7 +29,7 @@ import {
 } from '../../hooks/queries';
 
 export default function HomeTab() {
-  const { user, setUser, switchTab, showToast } = useGame();
+  const { user, setUser, switchTab, showToast, refreshUser } = useGame();
   const [claimingCheckin, setClaimingCheckin] = useState(false);
   const [showBioModal, setShowBioModal] = useState(false);
   const [promoCode, setPromoCode] = useState('');
@@ -66,6 +66,15 @@ export default function HomeTab() {
     try {
       setClaimingCheckin(true);
       triggerHaptic('medium');
+
+      // Optimistically add streak points immediately for instant balance update!
+      const expectedPts = streakDays[streakIndex]?.val || 80;
+      setUser((prev) => ({
+        ...prev,
+        coins: (prev?.coins || 0) + expectedPts,
+        streak: (prev?.streak || 0) + 1,
+      }));
+
       const res = await api.dailyCheckIn();
       if (res.success && res.user) {
         setUser(res.user);
@@ -77,6 +86,7 @@ export default function HomeTab() {
         refetchGraph();
       }
     } catch (err) {
+      refreshUser();
       showToast(err.message, 'error');
     } finally {
       setClaimingCheckin(false);
@@ -89,7 +99,10 @@ export default function HomeTab() {
     if (!promoCode.trim()) return;
 
     try {
-      await redeemMutation.mutateAsync(promoCode.trim());
+      const res = await redeemMutation.mutateAsync(promoCode.trim());
+      if (res?.user) {
+        setUser(res.user);
+      }
       sound.playPowerup();
       confetti({ particleCount: 70, spread: 70, origin: { y: 0.6 } });
       setPromoCode('');
