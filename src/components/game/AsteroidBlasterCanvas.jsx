@@ -7,7 +7,7 @@ import { ChevronLeft, Volume2, VolumeX, Pause, Play, Maximize2, Minimize2 } from
 export default function AsteroidBlasterCanvas() {
   const canvasRef = useRef(null);
   const canvasContainerRef = useRef(null);
-  const { difficulty, handleGameEnd, setIsPlaying, theme } = useGame();
+  const { difficulty, handleGameEnd, setIsPlaying, theme, activeTournament } = useGame();
 
   const [countdownNum, setCountdownNum] = useState(3);
   const [isCountingDown, setIsCountingDown] = useState(true);
@@ -81,13 +81,13 @@ export default function AsteroidBlasterCanvas() {
     const ctx = canvas.getContext('2d');
 
     let initialLives = 3;
-    let bossHpMax = 500;
+    let bossHpMax = 180;
     if (difficulty === 'easy') {
       initialLives = 4;
-      bossHpMax = 350;
+      bossHpMax = 130;
     } else if (difficulty === 'hard') {
       initialLives = 2;
-      bossHpMax = 700;
+      bossHpMax = 250;
     }
 
     const state = {
@@ -234,7 +234,7 @@ export default function AsteroidBlasterCanvas() {
           sound.playBossSiren();
           triggerHaptic('heavy');
 
-          const hp = difficulty === 'hard' ? 700 : difficulty === 'easy' ? 350 : 500;
+          const hp = difficulty === 'hard' ? 250 : difficulty === 'easy' ? 130 : 180;
           state.boss = {
             x: width / 2,
             y: -70,
@@ -349,69 +349,53 @@ export default function AsteroidBlasterCanvas() {
         }
       }
 
-      // Spawn Enemy Squadrons (ONLY ACTIVE WHEN BOSS IS NOT ACTIVE)
+      // Continuous upgrades: keep drops coming even during boss fight
+      state.powerupDropTimer = (state.powerupDropTimer || 0) + dt;
+      if (state.powerupDropTimer > 12) {
+        state.powerupDropTimer = 0;
+        if (state.powerups.length < 3) {
+          spawnDrop(state, Math.random() * (width - 80) + 40, -15);
+        }
+      }
+
+      // Spawn Smaller Enemies in Groups of 3 (ONLY ACTIVE WHEN BOSS IS NOT ACTIVE)
       if (!state.bossActive) {
         state.spawnEnemyTimer += dt;
 
-        // Structured enemy pacing: keep 2 to 4 enemies on screen at all times!
-        // 1. If screen is empty, immediately spawn 2 enemies in formation
-        if (state.enemies.length === 0) {
-          const eTypes = [
-            { type: 'scout', hp: 1, speed: 90, scoreValue: 10, color: '#f43f5e' },
-            { type: 'interceptor', hp: 2, speed: 75, scoreValue: 20, color: '#fb7185' },
-          ];
-          state.enemies.push({
-            x: width * 0.3,
-            y: -25,
-            type: eTypes[0].type,
-            hp: eTypes[0].hp,
-            maxHp: eTypes[0].hp,
-            speed: eTypes[0].speed,
-            scoreValue: eTypes[0].scoreValue,
-            color: eTypes[0].color,
-            shootCooldown: 1.2,
-            wobbleOffset: 0,
-          });
-          state.enemies.push({
-            x: width * 0.7,
-            y: -35,
-            type: eTypes[1].type,
-            hp: eTypes[1].hp,
-            maxHp: eTypes[1].hp,
-            speed: eTypes[1].speed,
-            scoreValue: eTypes[1].scoreValue,
-            color: eTypes[1].color,
-            shootCooldown: 1.6,
-            wobbleOffset: Math.PI,
-          });
+        // Structured enemy pacing: spawn smaller enemies in groups of 3!
+        const needSpawn = state.enemies.length === 0 || (state.enemies.length < 5 && state.spawnEnemyTimer > 2.0);
+        if (needSpawn) {
           state.spawnEnemyTimer = 0;
-        } else if (state.enemies.length < 4) {
-          // Dynamic interval: if only 1 enemy on screen, spawn in 1.1s; if 2-3 enemies, spawn at 1.8s
-          const targetInterval = state.enemies.length < 2 ? 1.1 : 1.8;
-          if (state.spawnEnemyTimer > targetInterval) {
-            state.spawnEnemyTimer = 0;
 
-            const types = [
-              { type: 'scout', hp: 1, speed: 90, scoreValue: 10, color: '#f43f5e' },
-              { type: 'scout', hp: 1, speed: 95, scoreValue: 10, color: '#f43f5e' },
-              { type: 'interceptor', hp: 2, speed: 75, scoreValue: 20, color: '#fb7185' },
-              { type: 'heavy', hp: 3, speed: 55, scoreValue: 30, color: '#e11d48' },
-            ];
-            const chosen = types[Math.floor(Math.random() * types.length)];
+          const types = [
+            { type: 'scout', hp: 1, speed: 85, scoreValue: 10, color: '#f43f5e' },
+            { type: 'interceptor', hp: 2, speed: 70, scoreValue: 20, color: '#fb7185' },
+            { type: 'heavy', hp: 3, speed: 55, scoreValue: 30, color: '#e11d48' },
+          ];
+          const chosen = types[Math.floor(Math.random() * types.length)];
+          const centerX = Math.random() * (width - 120) + 60;
 
+          // Group of 3 formation (V-shape triplet)
+          const triplet = [
+            { x: centerX, y: -25, hp: chosen.hp, offset: 0 },
+            { x: Math.max(25, centerX - 36), y: -45, hp: 1, offset: Math.PI * 0.5 },
+            { x: Math.min(width - 25, centerX + 36), y: -45, hp: 1, offset: Math.PI },
+          ];
+
+          triplet.forEach((m) => {
             state.enemies.push({
-              x: Math.random() * (width - 60) + 30,
-              y: -30,
-              type: chosen.type,
-              hp: chosen.hp,
-              maxHp: chosen.hp,
+              x: m.x,
+              y: m.y,
+              type: m.hp > 1 ? chosen.type : 'scout',
+              hp: m.hp,
+              maxHp: m.hp,
               speed: chosen.speed,
-              scoreValue: chosen.scoreValue,
-              color: chosen.color,
-              shootCooldown: Math.random() * 1.2 + 0.8,
-              wobbleOffset: Math.random() * 10,
+              scoreValue: m.hp > 1 ? chosen.scoreValue : 10,
+              color: m.hp > 1 ? chosen.color : '#f43f5e',
+              shootCooldown: Math.random() * 1.5 + 0.9,
+              wobbleOffset: m.offset,
             });
-          }
+          });
         }
       }
 
@@ -562,7 +546,7 @@ export default function AsteroidBlasterCanvas() {
             const aimedSpeed = 5.8;
 
             if (phase === 1) {
-              // PHASE 1: Fires 3 bullets directly aiming at the user space craft
+              // PHASE 1: Fires 3 bullets directly aiming at the user space craft with spread
               [-0.14, 0, 0.14].forEach((offsetAngle) => {
                 state.enemyBullets.push({
                   x: boss.x,
@@ -573,21 +557,34 @@ export default function AsteroidBlasterCanvas() {
                 });
               });
               sound.playEnemyLaser();
-            } else if (phase === 2 || phase === 3) {
-              // PHASE 2 & 3: Fires 3 bullets aiming at user space craft AND fires 5 bullets in different directions (radial spread)!
-              [-0.14, 0, 0.14].forEach((offsetAngle) => {
-                state.enemyBullets.push({
-                  x: boss.x,
-                  y: boss.y + 24,
-                  vx: Math.cos(angleToPlayer + offsetAngle) * aimedSpeed,
-                  vy: Math.sin(angleToPlayer + offsetAngle) * aimedSpeed,
-                  color: '#ef4444',
-                });
+            } else if (phase === 2) {
+              // PHASE 2: Phase 1 bullets fire in 1 single straight position (no spread!), PLUS radial fan
+              state.enemyBullets.push({
+                x: boss.x,
+                y: boss.y + 24,
+                vx: Math.cos(angleToPlayer) * aimedSpeed,
+                vy: Math.sin(angleToPlayer) * aimedSpeed,
+                color: '#ef4444',
               });
 
-              // 5 radial fan bullets in different directions
+              // 5 radial fan bullets
               const spreadSpeed = 4.6;
               const spreadOffsets = [-0.75, -0.38, 0, 0.38, 0.75];
+              spreadOffsets.forEach((offset) => {
+                const spreadAngle = Math.PI / 2 + offset;
+                state.enemyBullets.push({
+                  x: boss.x,
+                  y: boss.y + 20,
+                  vx: Math.cos(spreadAngle) * spreadSpeed,
+                  vy: Math.sin(spreadAngle) * spreadSpeed,
+                  color: '#f97316',
+                });
+              });
+              sound.playEnemyLaser();
+            } else if (phase === 3) {
+              // PHASE 3: Phase 1 bullets completely removed! Only radial spread bullets and escort deployment
+              const spreadSpeed = 5.0;
+              const spreadOffsets = [-0.85, -0.5, -0.2, 0.2, 0.5, 0.85];
               spreadOffsets.forEach((offset) => {
                 const spreadAngle = Math.PI / 2 + offset;
                 state.enemyBullets.push({
@@ -654,30 +651,57 @@ export default function AsteroidBlasterCanvas() {
             createExplosion(state, b.x, b.y, '#f59e0b', 3);
 
             if (boss.hp <= 0) {
-              state.bossKilled = true;
-              state.bossActive = false;
-              state.boss = null;
               state.score += 600;
               createExplosion(state, boss.x, boss.y, '#ffffff', 35);
               sound.playExplosion(true);
               triggerHaptic('heavy');
+              spawnDrop(state, boss.x - 20, boss.y);
+              spawnDrop(state, boss.x + 20, boss.y);
 
-              state.floatTexts.push({
-                x: width / 2,
-                y: height / 2,
-                text: 'MOTHERSHIP DESTROYED! +600',
-                color: '#22c55e',
-                life: 3,
-              });
+              if (activeTournament) {
+                // ENDLESS TOURNAMENT MODE: Match does NOT end when boss is killed!
+                // Continue fighting endless waves and next bosses until player runs out of lives!
+                state.bossActive = false;
+                state.boss = null;
+                state.bossTimer = 45; // Next boss wave in 45s
 
-              setTimeout(() => {
-                state.gameOver = true;
-                handleGameEnd({
-                  score: state.score,
-                  kills: state.kills,
-                  bossKilled: true,
+                state.floatTexts.push({
+                  x: width / 2,
+                  y: height / 2 - 15,
+                  text: 'MOTHERSHIP DESTROYED! +600',
+                  color: '#22c55e',
+                  life: 2.5,
                 });
-              }, 1200);
+                state.floatTexts.push({
+                  x: width / 2,
+                  y: height / 2 + 15,
+                  text: 'NEXT WAVE INCOMING!',
+                  color: '#38bdf8',
+                  life: 2.5,
+                });
+              } else {
+                // Standard Arena game: Ends with victory modal
+                state.bossKilled = true;
+                state.bossActive = false;
+                state.boss = null;
+
+                state.floatTexts.push({
+                  x: width / 2,
+                  y: height / 2,
+                  text: 'MOTHERSHIP DESTROYED! +600',
+                  color: '#22c55e',
+                  life: 3,
+                });
+
+                setTimeout(() => {
+                  state.gameOver = true;
+                  handleGameEnd({
+                    score: state.score,
+                    kills: state.kills,
+                    bossKilled: true,
+                  });
+                }, 1200);
+              }
               break;
             }
           }
@@ -1185,13 +1209,6 @@ export default function AsteroidBlasterCanvas() {
             className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-100 dark:bg-white/10 text-neutral-800 dark:text-white"
           >
             {isPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
-          </button>
-
-          <button
-            onClick={toggleFullscreen}
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-neutral-100 dark:bg-white/10 text-neutral-800 dark:text-white"
-          >
-            {isFullscreen ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
           </button>
         </div>
       </div>

@@ -82,8 +82,12 @@ export default function GameOverModal() {
           </div>
 
           <div className="rounded-2xl bg-neutral-100 dark:bg-neutral-900/90 p-3 border border-neutral-200 dark:border-white/5">
-            <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block mb-1">Coins</span>
-            <span className="text-base font-black text-emerald-600 dark:text-green-400 font-mono">+{earnedCoins}</span>
+            <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block mb-1">
+              {activeTournament ? 'Points' : 'Coins'}
+            </span>
+            <span className="text-base font-black text-emerald-600 dark:text-green-400 font-mono">
+              {activeTournament ? 'Score Only' : `+${earnedCoins}`}
+            </span>
           </div>
         </div>
 

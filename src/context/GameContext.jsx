@@ -203,6 +203,7 @@ export const GameProvider = ({ children }) => {
         enemiesKilled: resultData.kills,
         bossKilled: resultData.bossKilled,
         difficulty,
+        isTournament: Boolean(activeTournament),
       });
 
       if (res.success && res.user) {
@@ -210,7 +211,7 @@ export const GameProvider = ({ children }) => {
         useAuthStore.getState().setUser(res.user);
       }
 
-      if (resultData.bossKilled) {
+      if (resultData.bossKilled && !activeTournament) {
         setShowBossVictoryModal(true);
       } else {
         setShowGameOverModal(true);

@@ -25,22 +25,9 @@ export default function ArenaTab() {
     setShowBossVictoryModal,
   } = useGame();
 
-  const [fullscreenMode, setFullscreenMode] = useState(user?.alwaysFullScreen ?? false);
-
   const handleDifficultySelect = (diff) => {
     triggerHaptic('selection');
     setDifficulty(diff);
-  };
-
-  const handleToggleFullscreen = async () => {
-    triggerHaptic('light');
-    const newVal = !fullscreenMode;
-    setFullscreenMode(newVal);
-    try {
-      await api.updatePreferences({ alwaysFullScreen: newVal });
-    } catch (e) {
-      // ignore
-    }
   };
 
   const wonToday = user ? user.wonToday : 0;
@@ -72,28 +59,6 @@ export default function ArenaTab() {
         >
           <HelpCircle className="w-3.5 h-3.5" />
           <span>Rules</span>
-        </button>
-      </div>
-
-      {/* 2. Fullscreen Toggle */}
-      <div className="glass-card rounded-2xl p-3.5 flex items-center justify-between transition-colors">
-        <div>
-          <span className="text-xs font-bold text-neutral-900 dark:text-white block">Always play full screen</span>
-          <span className="text-[11px] text-neutral-500 dark:text-neutral-400">Action games open edge to edge</span>
-        </div>
-        <button
-          onClick={handleToggleFullscreen}
-          className={`relative h-6 w-11 rounded-full transition-colors ${
-            fullscreenMode ? 'bg-black dark:bg-white' : 'bg-neutral-300 dark:bg-neutral-800'
-          }`}
-        >
-          <span
-            className={`block h-4 w-4 rounded-full transition-transform ${
-              fullscreenMode
-                ? 'translate-x-6 bg-white dark:bg-black'
-                : 'translate-x-1 bg-white dark:bg-white'
-            }`}
-          />
         </button>
       </div>
 

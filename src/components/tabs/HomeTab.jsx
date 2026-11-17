@@ -219,21 +219,14 @@ export default function HomeTab() {
           </div>
         </div>
 
-        {/* Convert & Withdraw Buttons */}
-        <div className="grid grid-cols-2 gap-3 pt-1">
+        {/* Withdraw Button */}
+        <div className="pt-1">
           <button
             onClick={() => switchTab('wallet')}
-            className="py-3.5 rounded-2xl text-xs font-bold bg-[#22222a] text-white border border-white/10 hover:bg-[#2c2c36] active:scale-95 transition-all flex items-center justify-center gap-1.5"
-          >
-            <span>Convert</span>
-          </button>
-
-          <button
-            onClick={() => switchTab('wallet')}
-            className="py-3.5 rounded-2xl text-xs font-bold bg-white text-black hover:bg-neutral-100 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-1.5"
+            className="w-full py-3.5 rounded-2xl text-xs font-bold bg-white text-black hover:bg-neutral-100 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-1.5"
           >
             <ArrowUpRight className="w-4 h-4" />
-            <span>Withdraw</span>
+            <span>Withdraw ({formatINR(coins / 1000 + withdrawableInr)})</span>
           </button>
         </div>
       </div>
