@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api, setActiveTelegramId } from '../services/api';
 import {
   initTelegramApp,
@@ -196,11 +197,24 @@ export const GameProvider = ({ children }) => {
     }
   }, [difficulty, showToast]);
 
+  const navigate = useNavigate();
   const switchTab = useCallback((tab) => {
     triggerHaptic('selection');
     setActiveTab(tab);
+    const routeMap = {
+      home: '/home',
+      tasks: '/tasks',
+      arena: '/arena',
+      refer: '/refers',
+      refers: '/refers',
+      wallet: '/wallet',
+      admin: '/admin/withdrawals',
+    };
+    if (routeMap[tab]) {
+      navigate(routeMap[tab]);
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
-  }, []);
+  }, [navigate]);
 
   const adminTelegramId = import.meta.env.VITE_ADMIN_TELEGRAM_ID || '5802486388';
   const adminUsername = (import.meta.env.VITE_ADMIN_USERNAME || 'Gaurav_281').toLowerCase();

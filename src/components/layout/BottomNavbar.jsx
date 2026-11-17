@@ -1,31 +1,46 @@
 import React from 'react';
-import { useGame } from '../../context/GameContext';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Home, CheckSquare, Gamepad2, Users, Wallet } from 'lucide-react';
+import { triggerHaptic } from '../../services/telegram';
 
 export default function BottomNavbar() {
-  const { activeTab, switchTab } = useGame();
+  const location = useLocation();
+  const navigate = useNavigate();
+
+  // Hide bottom navbar if inside admin routes
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
 
   const navItems = [
-    { id: 'home', label: 'Home', icon: Home },
-    { id: 'tasks', label: 'Tasks', icon: CheckSquare, badge: '6' },
-    { id: 'arena', label: 'Arena', icon: Gamepad2, isPill: true },
-    { id: 'refer', label: 'Refer', icon: Users },
-    { id: 'wallet', label: 'Wallet', icon: Wallet },
+    { id: 'home', path: '/home', label: 'Home', icon: Home },
+    { id: 'tasks', path: '/tasks', label: 'Tasks', icon: CheckSquare, badge: '6' },
+    { id: 'arena', path: '/arena', label: 'Arena', icon: Gamepad2, isPill: true },
+    { id: 'refer', path: '/refers', label: 'Refer', icon: Users },
+    { id: 'wallet', path: '/wallet', label: 'Wallet', icon: Wallet },
   ];
+
+  const handleNav = (path) => {
+    triggerHaptic('selection');
+    navigate(path);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-30 bg-white/95 dark:bg-[#0c0c0f]/95 backdrop-blur-xl border-t border-neutral-200 dark:border-white/10 px-4 py-2 pb-5 sm:pb-2 transition-colors shadow-lg">
       <div className="max-w-md mx-auto flex items-center justify-around">
         {navItems.map((item) => {
           const Icon = item.icon;
-          const isActive = activeTab === item.id;
+          const isActive =
+            location.pathname === item.path ||
+            (item.path === '/home' && (location.pathname === '/' || location.pathname === ''));
 
           // Center Elevated Pill Button for Arena
           if (item.isPill) {
             return (
               <button
                 key={item.id}
-                onClick={() => switchTab(item.id)}
+                onClick={() => handleNav(item.path)}
                 className="flex flex-col items-center group -mt-1 active:scale-95 transition-transform"
               >
                 <div
@@ -52,7 +67,7 @@ export default function BottomNavbar() {
           return (
             <button
               key={item.id}
-              onClick={() => switchTab(item.id)}
+              onClick={() => handleNav(item.path)}
               className="relative flex flex-col items-center py-1 px-3 transition-colors active:scale-95"
             >
               <div className="relative">

@@ -4,6 +4,7 @@ import { api } from '../../services/api';
 import { showAdsgramRewardAd } from '../../services/ads';
 import { triggerHaptic } from '../../services/telegram';
 import { sound } from '../../services/audio';
+import { useTasksQuery } from '../../hooks/queries';
 import {
   Users,
   Calendar,
@@ -22,45 +23,29 @@ import { formatPoints } from '../../utils/formatters';
 
 export default function TasksTab() {
   const { setUser, showToast } = useGame();
-  const [tasks, setTasks] = useState([]);
+  const { data: tasksData, isLoading, refetch } = useTasksQuery();
+
   const [selectedCategory, setSelectedCategory] = useState(() => {
     return sessionStorage.getItem('preferred_task_cat') || 'app_tasks';
   });
-  const [enabledCategories, setEnabledCategories] = useState({
+  const [activeTimers, setActiveTimers] = useState({});
+
+  const tasks = tasksData?.tasks || [];
+  const enabledCategories = tasksData?.enabledCategories || {
     app_tasks: true,
     daily: true,
     social: true,
     partner: true,
     exclusive: true,
-  });
-  const [loading, setLoading] = useState(true);
-  const [activeTimers, setActiveTimers] = useState({});
+  };
 
   useEffect(() => {
-    loadTasks();
     const pref = sessionStorage.getItem('preferred_task_cat');
     if (pref) {
       setSelectedCategory(pref);
       sessionStorage.removeItem('preferred_task_cat');
     }
   }, []);
-
-  async function loadTasks() {
-    try {
-      setLoading(true);
-      const res = await api.getTasks();
-      if (res.success) {
-        setTasks(res.tasks || []);
-        if (res.enabledCategories) {
-          setEnabledCategories(res.enabledCategories);
-        }
-      }
-    } catch (err) {
-      console.warn('Failed loading tasks:', err);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   const handleStartTask = async (task) => {
     triggerHaptic('medium');
@@ -110,10 +95,7 @@ export default function TasksTab() {
         sound.playPowerup();
         confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
         showToast(res.message, 'success');
-
-        setTasks((prev) =>
-          prev.map((t) => (t._id === taskId ? { ...t, status: 'completed' } : t))
-        );
+        refetch();
       }
     } catch (err) {
       showToast(err.message, 'error');

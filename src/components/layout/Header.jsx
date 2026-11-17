@@ -1,9 +1,13 @@
 import React from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useGame } from '../../context/GameContext';
 import { Sun, Moon, ShieldCheck } from 'lucide-react';
+import { triggerHaptic } from '../../services/telegram';
 
 export default function Header() {
-  const { user, activeTab, theme, toggleTheme, setShowProfileModal, isAdmin, setShowAdminModal } = useGame();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { user, theme, toggleTheme, setShowProfileModal, isAdmin } = useGame();
 
   const initial = user?.firstName ? user.firstName.charAt(0).toUpperCase() : 'P';
   const name = user?.firstName || (user?.username ? `@${user.username}` : 'Player');
@@ -22,15 +26,29 @@ export default function Header() {
     wallet: { title: 'Wallet', sub: 'Points, value & UPI withdrawals' },
   };
 
-  const isHome = activeTab === 'home';
-  const currentTabInfo = tabTitles[activeTab];
+  const path = location.pathname;
+  const isHome = path === '/home' || path === '/' || path === '';
+  const currentKey = path.includes('tasks')
+    ? 'tasks'
+    : path.includes('arena')
+    ? 'arena'
+    : path.includes('refer')
+    ? 'refer'
+    : path.includes('wallet')
+    ? 'wallet'
+    : 'home';
+
+  const currentTabInfo = tabTitles[currentKey];
 
   return (
     <header className="flex items-center justify-between px-5 pt-4 pb-2 transition-colors">
       {/* Left side: Profile Avatar ONLY on Home Tab */}
       {isHome ? (
         <button
-          onClick={() => setShowProfileModal(true)}
+          onClick={() => {
+            triggerHaptic('light');
+            setShowProfileModal(true);
+          }}
           className="flex items-center gap-3 text-left group transition-all"
         >
           <div className="relative">
@@ -64,7 +82,10 @@ export default function Header() {
       <div className="flex items-center gap-2">
         {isAdmin && (
           <button
-            onClick={() => setShowAdminModal(true)}
+            onClick={() => {
+              triggerHaptic('medium');
+              navigate('/admin/withdrawals');
+            }}
             aria-label="Admin Control Panel"
             className="flex h-10 px-3 items-center justify-center gap-1.5 rounded-full bg-red-500/15 border border-red-500/30 text-red-600 dark:text-red-400 font-mono text-xs font-black transition-all active:scale-95 shadow-sm"
           >

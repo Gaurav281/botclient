@@ -1,10 +1,12 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGame } from '../../context/GameContext';
 import { X, Sun, Moon, Shield, Award, Calendar, CreditCard, ShieldCheck } from 'lucide-react';
 import { formatISTDateTime, formatPoints } from '../../utils/formatters';
 
 export default function ProfileModal() {
-  const { user, showProfileModal, setShowProfileModal, theme, toggleTheme, isAdmin, setShowAdminModal } = useGame();
+  const navigate = useNavigate();
+  const { user, showProfileModal, setShowProfileModal, theme, toggleTheme, isAdmin } = useGame();
 
   if (!showProfileModal) return null;
 
@@ -98,11 +100,11 @@ export default function ProfileModal() {
               <button
                 onClick={() => {
                   setShowProfileModal(false);
-                  setShowAdminModal(true);
+                  navigate('/admin/withdrawals');
                 }}
                 className="px-3 py-1 rounded-full bg-red-500 text-white font-mono text-xs font-black shadow-md hover:bg-red-600 active:scale-95 transition-all"
               >
-                Open Admin Panel
+                Open Admin Console
               </button>
             </div>
           )}

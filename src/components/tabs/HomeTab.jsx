@@ -19,45 +19,31 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { formatINR, formatPoints } from '../../utils/formatters';
+import {
+  useWeeklyGraphQuery,
+  useTasksQuery,
+  useLiveTickerQuery,
+  useRedeemPromoMutation,
+} from '../../hooks/queries';
 
 export default function HomeTab() {
   const { user, setUser, switchTab, showToast } = useGame();
   const [claimingCheckin, setClaimingCheckin] = useState(false);
-  const [checkInData, setCheckInData] = useState(null);
-  const [liveTicker, setLiveTicker] = useState([]);
   const [promoCode, setPromoCode] = useState('');
-  const [weeklyData, setWeeklyData] = useState({
+
+  // TanStack Query caching & background refetch
+  const { data: graphData } = useWeeklyGraphQuery();
+  const { data: tasksData, refetch: refetchTasks } = useTasksQuery();
+  const { data: tickerData } = useLiveTickerQuery();
+  const redeemMutation = useRedeemPromoMutation();
+
+  const checkInData = tasksData?.checkIn || null;
+  const liveTicker = tickerData?.ticker || [];
+  const weeklyData = graphData || {
     todayEarned: 0,
     totalWeekEarned: 0,
     days: [],
-  });
-
-  useEffect(() => {
-    async function loadData() {
-      try {
-        const [tasksRes, tickerRes, graphRes] = await Promise.allSettled([
-          api.getTasks(),
-          api.getLiveTicker(),
-          api.getWeeklyGraph(),
-        ]);
-
-        if (tasksRes.status === 'fulfilled' && tasksRes.value?.success) {
-          setCheckInData(tasksRes.value.checkIn || null);
-        }
-
-        if (tickerRes.status === 'fulfilled' && tickerRes.value?.success && tickerRes.value.ticker?.length > 0) {
-          setLiveTicker(tickerRes.value.ticker);
-        }
-
-        if (graphRes.status === 'fulfilled' && graphRes.value?.success) {
-          setWeeklyData(graphRes.value);
-        }
-      } catch (err) {
-        console.warn('Failed loading home data:', err);
-      }
-    }
-    loadData();
-  }, []);
+  };
 
   const handleClaimCheckin = async () => {
     if (!checkInData?.canCheckIn) {
@@ -98,16 +84,12 @@ export default function HomeTab() {
     if (!promoCode.trim()) return;
 
     try {
-      const res = await api.redeemPromoCode(promoCode.trim());
-      if (res.success && res.user) {
-        setUser(res.user);
-        sound.playPowerup();
-        confetti({ particleCount: 70, spread: 70, origin: { y: 0.6 } });
-        showToast(res.message, 'success');
-        setPromoCode('');
-      }
+      await redeemMutation.mutateAsync(promoCode.trim());
+      sound.playPowerup();
+      confetti({ particleCount: 70, spread: 70, origin: { y: 0.6 } });
+      setPromoCode('');
     } catch (err) {
-      showToast(err.message, 'error');
+      // Handled by mutation
     }
   };
 

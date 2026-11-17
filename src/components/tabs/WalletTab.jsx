@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from '../../context/GameContext';
-import { api } from '../../services/api';
 import { triggerHaptic } from '../../services/telegram';
 import { sound } from '../../services/audio';
+import {
+  useWalletSummaryQuery,
+  useConvertPointsMutation,
+  useWithdrawMutation,
+} from '../../hooks/queries';
 import {
   Wallet,
   ArrowUpRight,
@@ -15,9 +19,10 @@ import confetti from 'canvas-confetti';
 import { formatINR, formatPoints, formatISTTime } from '../../utils/formatters';
 
 export default function WalletTab() {
-  const { user, setUser, showToast } = useGame();
-  const [walletSummary, setWalletSummary] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const { user, showToast } = useGame();
+  const { data: walletSummary, isLoading } = useWalletSummaryQuery();
+  const convertMutation = useConvertPointsMutation();
+  const withdrawMutation = useWithdrawMutation();
 
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showConvertModal, setShowConvertModal] = useState(false);
@@ -25,28 +30,12 @@ export default function WalletTab() {
   const [upiId, setUpiId] = useState('');
   const [withdrawAmount, setWithdrawAmount] = useState('10');
   const [pointsToConvert, setPointsToConvert] = useState(() => String(user?.coins || 0));
-  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    loadWallet();
-  }, []);
-
-  async function loadWallet() {
-    try {
-      setLoading(true);
-      const res = await api.getWalletSummary();
-      if (res.success) {
-        setWalletSummary(res);
-        if (res.savedUpiId) {
-          setUpiId(res.savedUpiId);
-        }
-      }
-    } catch (err) {
-      console.warn('Wallet summary load error:', err);
-    } finally {
-      setLoading(false);
+    if (walletSummary?.savedUpiId) {
+      setUpiId(walletSummary.savedUpiId);
     }
-  }
+  }, [walletSummary?.savedUpiId]);
 
   // Convert Points to Withdrawable INR (Even 1 PTS allowed: 1000 PTS = 1 INR)
   const handleConvertPoints = async (e) => {
@@ -61,21 +50,13 @@ export default function WalletTab() {
       return;
     }
 
+    triggerHaptic('medium');
     try {
-      setSubmitting(true);
-      triggerHaptic('medium');
-      const res = await api.convertPoints(pts);
-      if (res.success && res.user) {
-        setUser(res.user);
-        sound.playPowerup();
-        showToast(res.message, 'success');
-        setShowConvertModal(false);
-        loadWallet();
-      }
+      await convertMutation.mutateAsync(pts);
+      sound.playPowerup();
+      setShowConvertModal(false);
     } catch (err) {
-      showToast(err.message, 'error');
-    } finally {
-      setSubmitting(false);
+      // Toast handled by mutation
     }
   };
 
@@ -98,22 +79,14 @@ export default function WalletTab() {
       return;
     }
 
+    triggerHaptic('medium');
     try {
-      setSubmitting(true);
-      triggerHaptic('medium');
-      const res = await api.submitWithdrawal(upiId.trim(), amount);
-      if (res.success && res.user) {
-        setUser(res.user);
-        sound.playPowerup();
-        confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
-        showToast(res.message, 'success');
-        setShowWithdrawModal(false);
-        loadWallet();
-      }
+      await withdrawMutation.mutateAsync({ upiId: upiId.trim(), amountInr: amount });
+      sound.playPowerup();
+      confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
+      setShowWithdrawModal(false);
     } catch (err) {
-      showToast(err.message, 'error');
-    } finally {
-      setSubmitting(false);
+      // Toast handled by mutation
     }
   };
 
@@ -334,10 +307,10 @@ export default function WalletTab() {
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={submitting}
+                  disabled={withdrawMutation.isPending}
                   className="w-full btn-primary-white py-3.5 rounded-2xl text-xs font-black shadow-lg"
                 >
-                  {submitting ? 'Submitting Request...' : 'Submit Request via UPI'}
+                  {withdrawMutation.isPending ? 'Submitting Request...' : 'Submit Request via UPI'}
                 </button>
               </div>
             </form>
@@ -442,10 +415,10 @@ export default function WalletTab() {
               <div className="pt-1">
                 <button
                   type="submit"
-                  disabled={submitting || coins < 1 || parseInt(pointsToConvert || 0) < 1}
+                  disabled={convertMutation.isPending || coins < 1 || parseInt(pointsToConvert || 0) < 1}
                   className="w-full btn-primary-white py-3.5 rounded-2xl text-xs font-black shadow-lg transition-all"
                 >
-                  {submitting ? 'Converting...' : 'Convert to INR'}
+                  {convertMutation.isPending ? 'Converting...' : 'Convert to INR'}
                 </button>
               </div>
             </form>
