@@ -18,7 +18,7 @@ import {
   Smartphone,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import CountUp from 'react-countup';
+import AnimatedCountUp from '../common/AnimatedCountUp';
 import { formatINR, formatPoints } from '../../utils/formatters';
 import AddBioLinkModal from '../common/AddBioLinkModal';
 import {
@@ -185,7 +185,7 @@ export default function HomeTab() {
             <Coins className="w-5 h-5" />
           </div>
           <span className="text-4xl font-black tracking-tight text-white font-mono">
-            <CountUp end={coins} duration={1.2} separator="," preserveValue />
+            <AnimatedCountUp end={coins} duration={1.2} separator="," preserveValue />
           </span>
           <span className="text-sm font-bold text-neutral-400 font-mono">PTS</span>
         </div>
@@ -193,11 +193,11 @@ export default function HomeTab() {
         {/* Value Line */}
         <div className="flex items-center gap-2 text-xs text-neutral-300 mb-4 font-medium">
           <span>
-            ≈ <CountUp end={inrValue} decimals={2} duration={1.2} prefix="₹" preserveValue />
+            ≈ <AnimatedCountUp end={inrValue} decimals={2} duration={1.2} prefix="₹" preserveValue />
           </span>
           <span>•</span>
           <span className="text-white font-semibold">
-            <CountUp end={withdrawableInr} decimals={2} duration={1.2} prefix="₹" preserveValue /> ready to withdraw
+            <AnimatedCountUp end={withdrawableInr} decimals={2} duration={1.2} prefix="₹" preserveValue /> ready to withdraw
           </span>
         </div>
 

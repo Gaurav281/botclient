@@ -814,7 +814,7 @@ export default function AsteroidBlasterCanvas() {
       }
 
       // Render Floating Texts
-      ctx.font = 'bold 13px "Urbanist", sans-serif';
+      ctx.font = 'bold 13px "Inter", sans-serif';
       ctx.textAlign = 'center';
       for (const ft of state.floatTexts) {
         ctx.fillStyle = ft.color;
@@ -1157,7 +1157,7 @@ export default function AsteroidBlasterCanvas() {
     ctx.stroke();
 
     ctx.fillStyle = color;
-    ctx.font = 'bold 11px "Urbanist", sans-serif';
+    ctx.font = 'bold 11px "Inter", sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     ctx.fillText(type, 0, 1);

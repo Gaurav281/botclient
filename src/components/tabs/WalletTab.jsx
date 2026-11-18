@@ -28,7 +28,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
-import CountUp from 'react-countup';
+import AnimatedCountUp from '../common/AnimatedCountUp';
 import { formatINR, formatPoints, formatISTTime, formatISTDateTime } from '../../utils/formatters';
 
 export default function WalletTab() {
@@ -149,7 +149,7 @@ export default function WalletTab() {
 
         <div className="flex items-baseline gap-2 mb-1">
           <span className="text-3xl font-black text-neutral-900 dark:text-white font-mono tracking-tight">
-            <CountUp end={totalInr} decimals={2} duration={1.2} prefix="₹" preserveValue />
+            <AnimatedCountUp end={totalInr} decimals={2} duration={1.2} prefix="₹" preserveValue />
           </span>
         </div>
 
@@ -157,29 +157,16 @@ export default function WalletTab() {
           Live value of your earned PTS directly available for instant UPI withdrawal
         </p>
 
-        {/* Sub Cards: POINTS & VALUE */}
-        <div className="grid grid-cols-2 gap-2.5 mb-5">
-          <div className="rounded-2xl bg-neutral-100 dark:bg-neutral-900/90 p-3.5 border border-neutral-200 dark:border-white/5">
-            <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block mb-1">
-              Total Points
+        {/* Total Points Display */}
+        <div className="rounded-2xl bg-neutral-100 dark:bg-neutral-900/90 p-3.5 border border-neutral-200 dark:border-white/5 mb-5 flex items-center justify-between">
+          <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 font-bold">
+            Total Points
+          </span>
+          <div className="flex items-center gap-1.5">
+            <span className="text-base font-bold text-neutral-900 dark:text-white font-mono">
+              <AnimatedCountUp end={coins} duration={1.2} separator="," preserveValue />
             </span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-base font-bold text-neutral-900 dark:text-white font-mono">
-                <CountUp end={coins} duration={1.2} separator="," preserveValue />
-              </span>
-              <span className="text-[10px] text-neutral-400">PTS</span>
-            </div>
-          </div>
-
-          <div className="rounded-2xl bg-neutral-100 dark:bg-neutral-900/90 p-3.5 border border-neutral-200 dark:border-white/5">
-            <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block mb-1">
-              Rate
-            </span>
-            <div className="flex items-center gap-1.5">
-              <span className="text-base font-bold text-green-500 font-mono">
-                1k = ₹1.00
-              </span>
-            </div>
+            <span className="text-xs font-bold text-neutral-400 font-mono">PTS</span>
           </div>
         </div>
 
@@ -198,13 +185,13 @@ export default function WalletTab() {
         </div>
       </div>
 
-      {/* 2. Rate & Minimum Withdraw Pill (1000 PTS = 1 INR) */}
+      {/* 2. Minimum Withdraw Notice */}
       <div className="glass-card rounded-2xl p-3 flex items-center justify-between text-xs font-mono transition-colors">
         <div className="flex items-center gap-2 text-neutral-800 dark:text-neutral-300">
-          <span className="flex h-2 w-2 rounded-full bg-green-500" />
-          <span>1000 PTS = ₹1.00 INR</span>
+          <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
+          <span>Instant UPI Transfer</span>
         </div>
-        <span className="text-neutral-500 dark:text-neutral-400">Min. withdraw ₹{minWithdraw}</span>
+        <span className="text-neutral-500 dark:text-neutral-400 font-semibold">Min. withdraw ₹{minWithdraw}</span>
       </div>
 
       {/* Payout History Button */}
@@ -236,34 +223,34 @@ export default function WalletTab() {
         </span>
       </button>
 
-      {/* 3. Saved UPI ID Card (Click to edit & auto-used on withdraw) */}
+      {/* 3. Saved UPI ID Card */}
       <div
         onClick={() => {
           triggerHaptic('light');
           setNewUpiInput(user?.savedUpiId || upiId || '');
           setShowEditUpiModal(true);
         }}
-        className="glass-card rounded-2xl p-3.5 flex items-center justify-between border border-neutral-200 dark:border-white/5 hover:border-white/20 transition-all cursor-pointer active:scale-[0.99]"
+        className="glass-card rounded-2xl p-3.5 flex items-center justify-between border border-neutral-200 dark:border-white/5 hover:border-black/20 dark:hover:border-white/20 transition-all cursor-pointer active:scale-[0.99]"
       >
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-200 dark:bg-white/10 text-neutral-900 dark:text-white">
             <CreditCard className="w-4 h-4" />
           </div>
           <div>
-            <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block">
-              Saved UPI ID (Tap to Edit)
+            <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block font-semibold">
+              Saved UPI ID
             </span>
             <span className="text-xs font-semibold text-neutral-900 dark:text-white font-mono">
-              {user?.savedUpiId || 'No UPI ID saved — Tap to add'}
+              {user?.savedUpiId || upiId ? (user?.savedUpiId || upiId) : 'No UPI ID saved'}
             </span>
           </div>
         </div>
         <button
           type="button"
-          className="text-xs font-bold text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white px-2 py-1 rounded-lg bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 flex items-center gap-1"
+          className="text-xs font-bold text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 flex items-center gap-1"
         >
           <Edit2 className="w-3 h-3" />
-          <span>{user?.savedUpiId ? 'Change' : '+ Add'}</span>
+          <span>{user?.savedUpiId || upiId ? 'Edit' : 'Add'}</span>
         </button>
       </div>
 

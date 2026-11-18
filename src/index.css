@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  font-family: 'Urbanist', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
   color-scheme: light dark;
 }
 
@@ -19,23 +19,27 @@ html, body, #root {
   overscroll-behavior: none;
 }
 
-/* Dark Mode Background with crisp dotted grid */
+/* Dark Mode Background with subtle top-only dotted grid */
 .app-dotted-bg,
 html.dark, html.dark body {
   background-color: #070709;
-  background-image: radial-gradient(rgba(255, 255, 255, 0.12) 1.2px, transparent 1.2px);
-  background-size: 20px 20px;
-  background-attachment: fixed;
+  background-image:
+    linear-gradient(to bottom, transparent 0px, transparent 130px, #070709 250px, #070709 100%),
+    radial-gradient(rgba(255, 255, 255, 0.06) 1.1px, transparent 1.1px);
+  background-size: 100% 100%, 20px 20px;
+  background-repeat: no-repeat, repeat;
   color: #ffffff;
 }
 
-/* Light Mode Background with subtle black dotted grid */
+/* Light Mode Background with subtle top-only dotted grid */
 html:not(.dark) .app-dotted-bg,
 html:not(.dark), html:not(.dark) body {
-  background-color: #f4f5f8;
-  background-image: radial-gradient(rgba(0, 0, 0, 0.08) 1.2px, transparent 1.2px);
-  background-size: 20px 20px;
-  background-attachment: fixed;
+  background-color: #f8f9fa;
+  background-image:
+    linear-gradient(to bottom, transparent 0px, transparent 130px, #f8f9fa 250px, #f8f9fa 100%),
+    radial-gradient(rgba(0, 0, 0, 0.035) 1.1px, transparent 1.1px);
+  background-size: 100% 100%, 20px 20px;
+  background-repeat: no-repeat, repeat;
   color: #111827;
 }
 
