@@ -14,7 +14,10 @@ export default function AddBioLinkModal({
 
   if (!isOpen) return null;
 
-  const inviteLink = `https://t.me/FireflyPlayBot?start=${referralCode || 'pilot'}`;
+  const code = (referralCode || '').trim();
+  const inviteLink = code
+    ? `https://t.me/FireflyPlayBot?start=ref_${code}`
+    : `https://t.me/FireflyPlayBot?start=ref_pilot`;
 
   const handleCopy = () => {
     triggerHaptic('light');

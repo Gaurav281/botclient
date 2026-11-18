@@ -68,14 +68,6 @@ export default function HomeTab() {
       setClaimingCheckin(true);
       triggerHaptic('medium');
 
-      // Optimistically add streak points immediately for instant balance update!
-      const expectedPts = streakDays[streakIndex]?.val || 80;
-      setUser((prev) => ({
-        ...prev,
-        coins: (prev?.coins || 0) + expectedPts,
-        streak: (prev?.streak || 0) + 1,
-      }));
-
       const res = await api.dailyCheckIn();
       if (res.success && res.user) {
         setUser(res.user);
@@ -87,8 +79,9 @@ export default function HomeTab() {
         refetchGraph();
       }
     } catch (err) {
-      refreshUser();
-      showToast(err.message, 'error');
+      // If bio is not added or empty, show tutorial modal
+      setShowBioModal(true);
+      showToast(err.message || 'Please add the invite link to your bio first!', 'warning');
     } finally {
       setClaimingCheckin(false);
     }
@@ -195,10 +188,6 @@ export default function HomeTab() {
           <span>
             ≈ <AnimatedCountUp end={inrValue} decimals={2} duration={1.2} prefix="₹" preserveValue />
           </span>
-          <span>•</span>
-          <span className="text-white font-semibold">
-            <AnimatedCountUp end={withdrawableInr} decimals={2} duration={1.2} prefix="₹" preserveValue /> ready to withdraw
-          </span>
         </div>
 
         {/* Real Dynamic 7-Day Graph (Animated Stroke & Area Fill) */}
@@ -260,14 +249,7 @@ export default function HomeTab() {
           </div>
 
           <button
-            onClick={() => {
-              if (!checkInData?.canCheckIn) {
-                showToast('Already claimed today! Check back tomorrow.', 'info');
-                return;
-              }
-              triggerHaptic('light');
-              setShowBioModal(true);
-            }}
+            onClick={handleClaimCheckin}
             disabled={!checkInData?.canCheckIn || claimingCheckin}
             className={`px-5 py-2.5 rounded-2xl text-xs font-black transition-all shadow-md ${
               checkInData?.canCheckIn
@@ -296,7 +278,7 @@ export default function HomeTab() {
           </button>
         </div>
 
-        {/* 7-Day Streak Square Cards (D1 to D7) */}
+        {/* 7-Day Streak Square Cards (D1 to D7) - Bigger proportions */}
         <div className="grid grid-cols-7 gap-1.5 pt-1">
           {streakDays.map((item, idx) => {
             const isCompleted = idx < streakIndex;
@@ -305,7 +287,7 @@ export default function HomeTab() {
             return (
               <div
                 key={idx}
-                className={`aspect-square flex flex-col items-center justify-center rounded-2xl border text-center transition-all p-1 ${
+                className={`min-h-[58px] py-2 px-1 flex flex-col items-center justify-center rounded-2xl border text-center transition-all ${
                   isCurrent
                     ? 'bg-black text-white dark:bg-white dark:text-black border-black dark:border-white shadow-md font-bold'
                     : isCompleted
@@ -313,8 +295,8 @@ export default function HomeTab() {
                     : 'bg-neutral-50 dark:bg-[#141418] text-neutral-400 dark:text-neutral-500 border-neutral-200 dark:border-white/5'
                 }`}
               >
-                <span className="text-[10px] uppercase font-mono font-bold leading-none">{item.day}</span>
-                <span className="text-xs font-black mt-1 leading-none">
+                <span className="text-[11px] uppercase font-mono font-bold leading-none">{item.day}</span>
+                <span className="text-xs sm:text-sm font-black mt-1 leading-none">
                   {item.isGift ? '🎁' : item.val}
                 </span>
               </div>

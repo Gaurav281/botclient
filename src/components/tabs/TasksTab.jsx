@@ -115,6 +115,7 @@ export default function TasksTab() {
           badgeText: 'TOURNAMENT ATTEMPT UNLOCK',
           title: tournament.title || 'Tournament Attempt',
           description: `Watch this sponsor clip to unlock Attempt ${userPart.attempts + 1} of 10.`,
+          buttonText: 'Attempt Unlocked',
         }
       );
       return;

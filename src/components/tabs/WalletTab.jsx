@@ -197,46 +197,50 @@ export default function WalletTab() {
 
   return (
     <div className="space-y-4 px-4 pb-28 pt-2">
-      {/* 1. TOP DUAL BALANCE CARDS (Side-by-side Dark Obsidian matching reference image) */}
-      <div className="grid grid-cols-2 gap-2.5">
-        {/* Points Card */}
-        <div className="wallet-card-permanent-dark rounded-[26px] p-4 relative overflow-hidden flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] uppercase font-mono text-neutral-400 font-bold tracking-wider">
-              Points
-            </span>
-            <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-white">
-              <Coins className="w-3 h-3" />
-            </div>
+      {/* 1. TOP SINGLE UNIFIED BALANCE CARD (Permanent Dark Obsidian) */}
+      <div className="wallet-card-permanent-dark rounded-[28px] p-5 relative overflow-hidden shadow-xl">
+        <div className="flex items-center justify-between mb-3 border-b border-white/10 pb-2.5">
+          <span className="text-[11px] uppercase font-mono text-neutral-400 font-bold tracking-wider">
+            WALLET BALANCE
+          </span>
+          <div className="flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-white/10 border border-white/10 text-[10px] font-mono text-neutral-300">
+            <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
+            <span>1000 PTS = ₹1.00</span>
           </div>
-
-          <div className="my-1">
-            <span className="text-2xl font-black font-mono text-white tracking-tight">
-              <AnimatedCountUp end={coins} duration={1.2} separator="," preserveValue />
-            </span>
-          </div>
-
-          <span className="text-[10px] font-mono text-neutral-400">Total Points</span>
         </div>
 
-        {/* Cash Value Card */}
-        <div className="wallet-card-permanent-dark rounded-[26px] p-4 relative overflow-hidden flex flex-col justify-between">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-[10px] uppercase font-mono text-neutral-400 font-bold tracking-wider">
-              Withdrawable
-            </span>
-            <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs font-mono">
-              ₹
+        <div className="grid grid-cols-2 gap-4 items-center">
+          {/* Points */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-1">
+              <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-white">
+                <Coins className="w-3 h-3" />
+              </div>
+              <span className="text-[11px] font-mono text-neutral-400 font-bold uppercase tracking-wider">
+                Points
+              </span>
             </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-white tracking-tight">
+              <AnimatedCountUp end={coins} duration={1.2} separator="," preserveValue />
+            </div>
+            <span className="text-[10px] font-mono text-neutral-400">Total Points</span>
           </div>
 
-          <div className="my-1">
-            <span className="text-2xl font-black font-mono text-emerald-400 tracking-tight">
+          {/* Withdrawable */}
+          <div className="border-l border-white/10 pl-4 sm:pl-5">
+            <div className="flex items-center gap-1.5 mb-1">
+              <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs font-mono">
+                ₹
+              </div>
+              <span className="text-[11px] font-mono text-neutral-400 font-bold uppercase tracking-wider">
+                Withdrawable
+              </span>
+            </div>
+            <div className="text-2xl sm:text-3xl font-black font-mono text-emerald-400 tracking-tight">
               <AnimatedCountUp end={totalInr} decimals={2} duration={1.2} prefix="₹" preserveValue />
-            </span>
+            </div>
+            <span className="text-[10px] font-mono text-neutral-400">Ready in INR</span>
           </div>
-
-          <span className="text-[10px] font-mono text-neutral-400">Live INR Value</span>
         </div>
       </div>
 

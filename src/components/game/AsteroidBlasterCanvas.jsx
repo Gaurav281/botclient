@@ -4,7 +4,8 @@ import { useGame } from '../../context/GameContext';
 import { sound } from '../../services/audio';
 import { triggerHaptic } from '../../services/telegram';
 import { api } from '../../services/api';
-import { ChevronLeft, X, Volume2, VolumeX, Pause, Play, Maximize2, Minimize2 } from 'lucide-react';
+import { showAdsgramRewardAd } from '../../services/ads';
+import { ChevronLeft, X, Volume2, VolumeX, Pause, Play, Maximize2, Minimize2, Heart } from 'lucide-react';
 
 export default function AsteroidBlasterCanvas() {
   const canvasRef = useRef(null);
@@ -25,6 +26,13 @@ export default function AsteroidBlasterCanvas() {
   const [isPaused, setIsPaused] = useState(false);
   const [soundOn, setSoundOn] = useState(sound.enabled);
   const [isFullscreen, setIsFullscreen] = useState(false);
+
+  // Revive Lifeline State
+  const [showRevive, setShowRevive] = useState(false);
+  const [reviveCountdown, setReviveCountdown] = useState(5);
+  const [isWatchingAd, setIsWatchingAd] = useState(false);
+  const reviveTimerRef = useRef(null);
+  const triggerReviveRef = useRef(null);
 
   const [hudState, setHudState] = useState({
     score: 0,
@@ -78,6 +86,97 @@ export default function AsteroidBlasterCanvas() {
       navigate('/arena/asteroid-blaster');
     }
   }, [activeTournament, difficulty, setIsPlaying, setActiveTournament, showToast, navigate]);
+
+  // Forfeit revive or timeout -> finish game normally
+  const handleForfeitRevive = useCallback(() => {
+    if (reviveTimerRef.current) {
+      clearInterval(reviveTimerRef.current);
+      reviveTimerRef.current = null;
+    }
+    setShowRevive(false);
+    setIsWatchingAd(false);
+    const state = gameStateRef.current;
+    if (state) {
+      state.gameOver = true;
+      handleGameEnd({
+        score: state.score,
+        kills: state.kills,
+        bossKilled: false,
+      });
+    }
+  }, [handleGameEnd]);
+
+  // Accept Revive: Watch Adsgram Rewarded Ad
+  const handleAcceptRevive = useCallback(async () => {
+    if (reviveTimerRef.current) {
+      clearInterval(reviveTimerRef.current);
+      reviveTimerRef.current = null;
+    }
+    setIsWatchingAd(true);
+    triggerHaptic('medium');
+
+    try {
+      await showAdsgramRewardAd(async () => {
+        const state = gameStateRef.current;
+        if (!state) return;
+
+        state.reviveUsed = true;
+        state.lives = 1;
+        setHudState((prev) => ({ ...prev, lives: 1 }));
+        state.utilityBoost = { type: 'Shield', duration: 4 };
+        state.player.invulnerableTimer = 4.0;
+        // Clear enemy bullets so the ship doesn't immediately get hit
+        state.enemyBullets = [];
+
+        state.floatTexts.push({
+          x: state.player.x,
+          y: state.player.y - 30,
+          text: 'SHIP REVIVED! +1 LIFE',
+          color: '#10b981',
+          life: 2.0,
+        });
+
+        triggerHaptic('success');
+        sound.playPowerup();
+
+        setShowRevive(false);
+        setIsWatchingAd(false);
+        setIsPaused(false);
+      }, {
+        badgeText: 'REVIVE LIFELINE',
+        title: 'Revive Spaceship',
+        description: 'Watch this sponsor video to revive with 1 life and shield protection!',
+        buttonText: 'Revive & Continue',
+      });
+    } catch (err) {
+      console.warn('Revive ad failed:', err);
+      setIsWatchingAd(false);
+      handleForfeitRevive();
+    }
+  }, [handleForfeitRevive]);
+
+  // Trigger Revive modal with 5 second countdown
+  const triggerReviveLifeline = useCallback(() => {
+    setShowRevive(true);
+    setReviveCountdown(5);
+    triggerHaptic('warning');
+    sound.playPlayerHit();
+
+    if (reviveTimerRef.current) clearInterval(reviveTimerRef.current);
+    reviveTimerRef.current = setInterval(() => {
+      setReviveCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(reviveTimerRef.current);
+          reviveTimerRef.current = null;
+          handleForfeitRevive();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [handleForfeitRevive]);
+
+  triggerReviveRef.current = triggerReviveLifeline;
 
   // Toggle Sound
   const toggleSound = () => {
@@ -149,6 +248,7 @@ export default function AsteroidBlasterCanvas() {
       maxLives: initialLives,
       kills: 0,
       gameOver: false,
+      reviveUsed: false,
       bossKilled: false,
       bossActive: false,
       bossTimer: 60, // 60s as in reference image
@@ -907,8 +1007,17 @@ export default function AsteroidBlasterCanvas() {
         activeBoosts: currentBoosts,
       });
 
-      // Check Game Over
+      // Check Game Over / Revive
       if (state.lives <= 0 && !state.gameOver) {
+        // Offer Revive once (non-tournament only)
+        if (!activeTournament && !state.reviveUsed) {
+          setIsPaused(true);
+          if (triggerReviveRef.current) {
+            triggerReviveRef.current();
+          }
+          return;
+        }
+
         state.gameOver = true;
         sound.playPlayerHit();
         triggerHaptic('error');
@@ -1348,7 +1457,7 @@ export default function AsteroidBlasterCanvas() {
         </div>
 
         {/* Pause Overlay */}
-        {isPaused && (
+        {isPaused && !showRevive && (
           <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm p-4">
             <h3 className="text-xl font-black text-white mb-2">Paused</h3>
             <button
@@ -1357,6 +1466,55 @@ export default function AsteroidBlasterCanvas() {
             >
               Resume
             </button>
+          </div>
+        )}
+
+        {/* Revive Lifeline Overlay */}
+        {showRevive && (
+          <div className="absolute inset-0 z-40 flex items-center justify-center bg-black/85 backdrop-blur-md p-4 animate-fade-in">
+            <div className="text-center p-6 glass-card rounded-[32px] max-w-xs w-full border border-white/15 shadow-2xl relative overflow-hidden">
+              {/* Ambient pulse glow */}
+              <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-40 h-40 bg-pink-500/20 rounded-full blur-2xl pointer-events-none" />
+
+              {/* Heart Icon with countdown ring */}
+              <div className="relative mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+                <div className="absolute inset-0 rounded-full bg-pink-500/20 animate-ping opacity-60" />
+                <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-pink-600 to-rose-500 flex items-center justify-center shadow-lg shadow-pink-500/30">
+                  <Heart className="w-8 h-8 text-white fill-white" />
+                </div>
+                <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-black border-2 border-pink-500 text-[11px] font-black font-mono text-white flex items-center justify-center">
+                  {reviveCountdown}
+                </span>
+              </div>
+
+              <h3 className="text-2xl font-black text-white tracking-tight mb-1">
+                Revive Lifeline!
+              </h3>
+              <p className="text-xs text-neutral-300 font-medium mb-5 px-2">
+                Watch a quick sponsor ad to get <strong className="text-pink-400">+1 Life & Shield</strong> and continue your run!
+              </p>
+
+              <div className="space-y-2.5">
+                <button
+                  type="button"
+                  onClick={handleAcceptRevive}
+                  disabled={isWatchingAd}
+                  className="w-full py-3.5 px-4 rounded-2xl bg-white text-black font-black text-xs uppercase tracking-wider shadow-xl hover:bg-neutral-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  <Play className="w-4 h-4 fill-black" />
+                  <span>Watch Ad to Revive</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleForfeitRevive}
+                  disabled={isWatchingAd}
+                  className="w-full py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-neutral-400 hover:text-white font-bold text-xs active:scale-95 transition-all"
+                >
+                  Give Up ({reviveCountdown}s)
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </div>

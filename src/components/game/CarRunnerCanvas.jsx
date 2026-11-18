@@ -4,6 +4,7 @@ import { useGame } from '../../context/GameContext';
 import { triggerHaptic } from '../../services/telegram';
 import { sound } from '../../services/audio';
 import { api } from '../../services/api';
+import { showAdsgramRewardAd } from '../../services/ads';
 import { Pause, Play, X, Heart, Shield, Gem } from 'lucide-react';
 
 export default function CarRunnerCanvas() {
@@ -23,6 +24,13 @@ export default function CarRunnerCanvas() {
   const [diamonds, setDiamonds] = useState(0);
   const [score, setScore] = useState(0);
 
+  // Revive Lifeline State
+  const [showRevive, setShowRevive] = useState(false);
+  const [reviveCountdown, setReviveCountdown] = useState(5);
+  const [isWatchingAd, setIsWatchingAd] = useState(false);
+  const reviveTimerRef = useRef(null);
+  const triggerReviveRef = useRef(null);
+
   // References to keep game loop in sync
   const isPausedRef = useRef(false);
   isPausedRef.current = isPaused;
@@ -32,6 +40,7 @@ export default function CarRunnerCanvas() {
     score: 0,
     diamonds: 0,
     lives: 3,
+    reviveUsed: false,
     invulnerableTime: 0,
     baseSpeed: 280, // Pixels per second
     speedMultiplier: 1.0,
@@ -51,6 +60,102 @@ export default function CarRunnerCanvas() {
     lastTime: 0,
     shake: 0,
   });
+
+  // Forfeit revive or timeout -> finish game normally
+  const handleForfeitRevive = useCallback(() => {
+    if (reviveTimerRef.current) {
+      clearInterval(reviveTimerRef.current);
+      reviveTimerRef.current = null;
+    }
+    setShowRevive(false);
+    setIsWatchingAd(false);
+    const state = gameStateRef.current;
+    if (state) {
+      state.running = false;
+      handleGameEnd({
+        score: Math.round(state.score),
+        kills: state.diamonds,
+        bossKilled: false,
+      });
+    }
+  }, [handleGameEnd]);
+
+  // Accept Revive: Watch Adsgram Rewarded Ad
+  const handleAcceptRevive = useCallback(async () => {
+    if (reviveTimerRef.current) {
+      clearInterval(reviveTimerRef.current);
+      reviveTimerRef.current = null;
+    }
+    setIsWatchingAd(true);
+    triggerHaptic('medium');
+
+    try {
+      await showAdsgramRewardAd(async () => {
+        const state = gameStateRef.current;
+        if (!state) return;
+
+        state.reviveUsed = true;
+        state.lives = 1;
+        setLives(1);
+        state.invulnerableTime = 3.0;
+        state.shake = 0;
+        // Clear nearby traffic cars so player doesn't instantly collide on restart
+        state.traffic = state.traffic.filter(
+          (car) => car.y < -40 || car.y > (canvasRef.current?.height || 800) * 0.8
+        );
+
+        state.floatTexts.push({
+          x: state.playerX || window.innerWidth / 2,
+          y: (state.playerY || 500) - 40,
+          text: 'REVIVED! +1 LIFE',
+          color: '#10b981',
+          life: 2.0,
+        });
+
+        triggerHaptic('success');
+        sound.playPowerup();
+
+        setShowRevive(false);
+        setIsWatchingAd(false);
+
+        // Resume game running
+        state.running = true;
+        state.lastTime = performance.now();
+      }, {
+        badgeText: 'REVIVE LIFELINE',
+        title: 'Revive Mini Racing',
+        description: 'Watch this sponsor clip to revive with 1 life and shield protection!',
+        buttonText: 'Revive & Continue',
+      });
+    } catch (err) {
+      console.warn('Revive ad failed:', err);
+      setIsWatchingAd(false);
+      handleForfeitRevive();
+    }
+  }, [handleForfeitRevive]);
+
+  // Trigger Revive modal with 5 second countdown
+  const triggerReviveLifeline = useCallback(() => {
+    setShowRevive(true);
+    setReviveCountdown(5);
+    triggerHaptic('warning');
+    sound.playPlayerHit();
+
+    if (reviveTimerRef.current) clearInterval(reviveTimerRef.current);
+    reviveTimerRef.current = setInterval(() => {
+      setReviveCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(reviveTimerRef.current);
+          reviveTimerRef.current = null;
+          handleForfeitRevive();
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [handleForfeitRevive]);
+
+  triggerReviveRef.current = triggerReviveLifeline;
 
   // Toggle Pause
   const togglePause = useCallback(() => {
@@ -345,6 +450,15 @@ export default function CarRunnerCanvas() {
             state.traffic.splice(i, 1);
 
             if (state.lives <= 0) {
+              // Revive option (once per session, non-tournament only)
+              if (!activeTournament && !state.reviveUsed) {
+                state.running = false;
+                if (triggerReviveRef.current) {
+                  triggerReviveRef.current();
+                }
+                return;
+              }
+
               // Game Over
               state.running = false;
               handleGameEnd({
@@ -765,6 +879,55 @@ export default function CarRunnerCanvas() {
                 className="w-full btn-secondary-dark py-3 rounded-2xl text-xs font-bold"
               >
                 Exit to Arena
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Revive Lifeline Overlay */}
+      {showRevive && (
+        <div className="absolute inset-0 bg-black/85 backdrop-blur-md flex items-center justify-center z-30 p-4 animate-fade-in">
+          <div className="text-center p-6 glass-card rounded-[32px] max-w-xs w-full border border-white/15 shadow-2xl relative overflow-hidden">
+            {/* Ambient pulse glow */}
+            <div className="absolute -top-10 left-1/2 -translate-x-1/2 w-40 h-40 bg-rose-500/20 rounded-full blur-2xl pointer-events-none" />
+
+            {/* Heart Icon with countdown ring */}
+            <div className="relative mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+              <div className="absolute inset-0 rounded-full bg-rose-500/20 animate-ping opacity-60" />
+              <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-rose-600 to-pink-500 flex items-center justify-center shadow-lg shadow-rose-500/30">
+                <Heart className="w-8 h-8 text-white fill-white" />
+              </div>
+              <span className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-black border-2 border-rose-500 text-[11px] font-black font-mono text-white flex items-center justify-center">
+                {reviveCountdown}
+              </span>
+            </div>
+
+            <h3 className="text-2xl font-black text-white tracking-tight mb-1">
+              Revive Lifeline!
+            </h3>
+            <p className="text-xs text-neutral-300 font-medium mb-5 px-2">
+              Watch a quick sponsor ad to get <strong className="text-rose-400">+1 Life & Shield</strong> and continue your run!
+            </p>
+
+            <div className="space-y-2.5">
+              <button
+                type="button"
+                onClick={handleAcceptRevive}
+                disabled={isWatchingAd}
+                className="w-full py-3.5 px-4 rounded-2xl bg-white text-black font-black text-xs uppercase tracking-wider shadow-xl hover:bg-neutral-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <Play className="w-4 h-4 fill-black" />
+                <span>Watch Ad to Revive</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={handleForfeitRevive}
+                disabled={isWatchingAd}
+                className="w-full py-3 rounded-2xl bg-white/10 hover:bg-white/15 text-neutral-400 hover:text-white font-bold text-xs active:scale-95 transition-all"
+              >
+                Give Up ({reviveCountdown}s)
               </button>
             </div>
           </div>

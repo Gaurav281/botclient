@@ -91,7 +91,7 @@ function simulateRewardAdVideo(callback, options = {}) {
       if (timerText) timerText.innerText = 'Reward verified! Click below to claim.';
       if (claimBtn) {
         claimBtn.disabled = false;
-        claimBtn.innerText = 'Claim 200 Boss Coins';
+        claimBtn.innerText = options.buttonText || options.claimText || 'Claim Reward';
         claimBtn.className = 'w-full rounded-xl bg-white py-3 text-sm font-bold text-black shadow-lg hover:bg-neutral-200 active:scale-95 transition-all';
         claimBtn.onclick = () => {
           overlay.remove();

@@ -199,21 +199,22 @@ export const GameProvider = ({ children }) => {
     }
   }, [user, showToast]);
 
-  // Launch Tournament Match specifically
+  // Launch Tournament Match specifically (never consumes normal matches energy)
   const launchTournamentMatch = useCallback((tournament) => {
     if (!user) return;
     const targetGame = tournament.gameType || 'asteroid_blaster';
     setActiveTournament(tournament);
     setActiveGameType(targetGame);
     setDifficulty('normal');
-    confirmStartGame(targetGame);
+    confirmStartGame(targetGame, true);
   }, [user]);
 
-  const confirmStartGame = useCallback(async (forcedGameType) => {
+  const confirmStartGame = useCallback(async (forcedGameType, isTourneyMatch = false) => {
     try {
       setShowRulesModal(false);
       const targetGame = forcedGameType || activeGameType;
-      const res = await api.startGame({ gameType: targetGame });
+      const isTournament = Boolean(isTourneyMatch || activeTournament);
+      const res = await api.startGame({ gameType: targetGame, isTournament });
       if (res.success) {
         if (res.user) {
           setUser(res.user);
@@ -223,7 +224,7 @@ export const GameProvider = ({ children }) => {
     } catch (err) {
       showToast(err.message || 'Error starting match', 'error');
     }
-  }, [activeGameType, setUser, showToast]);
+  }, [activeGameType, activeTournament, setUser, showToast]);
 
   // Handle Game Finish (keep canvas mounted so result modal renders over game)
   const handleGameEnd = useCallback(async (resultData) => {
