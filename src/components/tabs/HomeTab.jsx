@@ -201,8 +201,8 @@ export default function HomeTab() {
           </span>
         </div>
 
-        {/* Real Dynamic 7-Day Graph (Vibrant Green Aesthetic) */}
-        <div className="h-16 w-full relative mb-4">
+        {/* Real Dynamic 7-Day Graph (Animated Stroke & Area Fill) */}
+        <div className="h-16 w-full relative mb-6">
           <svg className="w-full h-full" viewBox="0 0 300 65" preserveAspectRatio="none">
             <defs>
               <linearGradient id="balanceGraphGrad" x1="0%" y1="0%" x2="0%" y2="100%">
@@ -210,20 +210,21 @@ export default function HomeTab() {
                 <stop offset="100%" stopColor="#10b981" stopOpacity="0.0" />
               </linearGradient>
             </defs>
-            <path d={fillD} fill="url(#balanceGraphGrad)" />
+            <path d={fillD} fill="url(#balanceGraphGrad)" className="animate-graph-area" />
             <path
               d={pathD}
               fill="none"
               stroke="#10b981"
               strokeWidth="2.8"
               strokeLinecap="round"
+              className="animate-graph-stroke"
             />
             <circle cx={lastPoint.x} cy={lastPoint.y} r="4" fill="#10b981" />
-            <circle cx={lastPoint.x} cy={lastPoint.y} r="8" fill="#10b981" opacity="0.35" />
+            <circle cx={lastPoint.x} cy={lastPoint.y} r="8" fill="#10b981" className="animate-graph-pulse" />
           </svg>
 
           {/* Real 7 Day Labels */}
-          <div className="flex justify-between text-[11px] text-neutral-400 font-mono mt-1 px-1">
+          <div className="flex justify-between text-[11px] text-neutral-400 font-mono mt-2 px-1">
             {daysArray.map((d, idx) => (
               <span
                 key={idx}
@@ -235,8 +236,8 @@ export default function HomeTab() {
           </div>
         </div>
 
-        {/* Withdraw Button */}
-        <div className="pt-1">
+        {/* Withdraw Button (Comfortable Spacing from Graph) */}
+        <div className="pt-4 mt-3 border-t border-white/5">
           <button
             onClick={() => switchTab('wallet')}
             className="w-full py-3.5 rounded-2xl text-xs font-bold bg-white text-black hover:bg-neutral-100 active:scale-95 transition-all shadow-lg flex items-center justify-center gap-1.5"

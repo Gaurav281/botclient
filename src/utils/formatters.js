@@ -36,3 +36,15 @@ export function formatISTTime(date) {
     hour12: true,
   }).format(new Date(date));
 }
+
+export function formatTimeAgo(date) {
+  if (!date) return 'Recently';
+  const diffMs = Date.now() - new Date(date).getTime();
+  const diffMins = Math.floor(diffMs / (60 * 1000));
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHours = Math.floor(diffMins / 60);
+  if (diffHours < 24) return `${diffHours}h ago`;
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+}

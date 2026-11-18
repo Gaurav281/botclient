@@ -23,10 +23,10 @@ export default function Toast() {
   }
 
   return (
-    <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-sm pointer-events-none animate-fade-in">
-      <div className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl border shadow-2xl backdrop-blur-xl ${bg}`}>
+    <div className="fixed top-5 left-3 right-7 sm:left-6 sm:right-auto z-[99999] pointer-events-none flex justify-start animate-fade-in">
+      <div className={`flex items-center gap-2.5 px-4 py-3 rounded-2xl border shadow-2xl backdrop-blur-xl max-w-sm w-auto ${bg}`}>
         <Icon className="w-4 h-4 shrink-0" />
-        <span className="text-xs font-semibold leading-snug">{message}</span>
+        <span className="text-xs font-semibold leading-snug break-words">{message}</span>
       </div>
     </div>
   );

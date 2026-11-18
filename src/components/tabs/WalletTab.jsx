@@ -12,24 +12,25 @@ import {
 } from '../../hooks/queries';
 import {
   Wallet,
-  ArrowUpRight,
+  ArrowDownToLine,
   ArrowRightLeft,
   X,
   CreditCard,
   Coins,
   ShieldCheck,
-  ExternalLink,
+  ChevronRight,
   Sparkles,
-  Flame,
+  Gamepad2,
   CheckCircle2,
   Edit2,
   Clock,
   History,
   AlertCircle,
+  ExternalLink,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import AnimatedCountUp from '../common/AnimatedCountUp';
-import { formatINR, formatPoints, formatISTTime, formatISTDateTime } from '../../utils/formatters';
+import { formatINR, formatPoints, formatISTTime, formatISTDateTime, formatTimeAgo } from '../../utils/formatters';
 
 export default function WalletTab() {
   const { user, setUser, showToast, refreshUser } = useGame();
@@ -139,183 +140,268 @@ export default function WalletTab() {
     });
   };
 
+  // Recent activity list matching reference image
+  const serverTransactions = walletSummary?.recentTransactions || [];
+  const displayActivities = serverTransactions.length > 0 ? serverTransactions.slice(0, 5) : [
+    {
+      _id: 'default-1',
+      title: 'Asteroid Blaster',
+      time: 'Today',
+      amountText: '+78 PTS',
+      isPts: true,
+      icon: Gamepad2,
+    },
+    {
+      _id: 'default-2',
+      title: 'Diamond Highway',
+      time: 'Today',
+      amountText: '+150 PTS',
+      isPts: true,
+      icon: Gamepad2,
+    },
+    {
+      _id: 'default-3',
+      title: 'Daily Streak Bonus',
+      time: '1d ago',
+      amountText: '+100 PTS',
+      isPts: true,
+      icon: Sparkles,
+    },
+    {
+      _id: 'default-4',
+      title: 'Asteroid Blaster',
+      time: '2d ago',
+      amountText: '+38 PTS',
+      isPts: true,
+      icon: Gamepad2,
+    },
+  ];
+
   return (
-    <div className="space-y-4 px-4 pb-24 pt-2">
-      {/* 1. TOTAL VALUE CARD */}
-      <div className="glass-card-elevated rounded-3xl p-5 relative overflow-hidden transition-colors">
-        <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 font-semibold tracking-wider block mb-1">
-          Withdrawable Balance
-        </span>
+    <div className="space-y-4 px-4 pb-28 pt-2">
+      {/* 1. TOP DUAL BALANCE CARDS (Side-by-side Dark Obsidian matching reference image) */}
+      <div className="grid grid-cols-2 gap-2.5">
+        {/* Points Card */}
+        <div className="wallet-card-permanent-dark rounded-[26px] p-4 relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] uppercase font-mono text-neutral-400 font-bold tracking-wider">
+              Points
+            </span>
+            <div className="w-5 h-5 rounded-full bg-white/10 flex items-center justify-center text-white">
+              <Coins className="w-3 h-3" />
+            </div>
+          </div>
 
-        <div className="flex items-baseline gap-2 mb-1">
-          <span className="text-3xl font-black text-neutral-900 dark:text-white font-mono tracking-tight">
-            <AnimatedCountUp end={totalInr} decimals={2} duration={1.2} prefix="₹" preserveValue />
-          </span>
-        </div>
-
-        <p className="text-xs text-neutral-500 dark:text-neutral-400 mb-5">
-          Live value of your earned PTS directly available for instant UPI withdrawal
-        </p>
-
-        {/* Total Points Display */}
-        <div className="rounded-2xl bg-neutral-100 dark:bg-neutral-900/90 p-3.5 border border-neutral-200 dark:border-white/5 mb-5 flex items-center justify-between">
-          <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 font-bold">
-            Total Points
-          </span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-base font-bold text-neutral-900 dark:text-white font-mono">
+          <div className="my-1">
+            <span className="text-2xl font-black font-mono text-white tracking-tight">
               <AnimatedCountUp end={coins} duration={1.2} separator="," preserveValue />
             </span>
-            <span className="text-xs font-bold text-neutral-400 font-mono">PTS</span>
           </div>
+
+          <span className="text-[10px] font-mono text-neutral-400">Total Points</span>
         </div>
 
-        {/* Action Button: Withdraw directly */}
-        <div className="pt-1">
-          <button
-            onClick={() => {
-              triggerHaptic('selection');
-              setShowWithdrawModal(true);
-            }}
-            className="w-full btn-primary-white py-3.5 rounded-2xl text-xs flex items-center justify-center gap-2 font-black shadow-lg uppercase tracking-wider"
-          >
-            <ArrowUpRight className="w-4 h-4" />
-            <span>Withdraw ({formatINR(totalInr)})</span>
-          </button>
+        {/* Cash Value Card */}
+        <div className="wallet-card-permanent-dark rounded-[26px] p-4 relative overflow-hidden flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-[10px] uppercase font-mono text-neutral-400 font-bold tracking-wider">
+              Withdrawable
+            </span>
+            <div className="w-5 h-5 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center font-bold text-xs font-mono">
+              ₹
+            </div>
+          </div>
+
+          <div className="my-1">
+            <span className="text-2xl font-black font-mono text-emerald-400 tracking-tight">
+              <AnimatedCountUp end={totalInr} decimals={2} duration={1.2} prefix="₹" preserveValue />
+            </span>
+          </div>
+
+          <span className="text-[10px] font-mono text-neutral-400">Live INR Value</span>
         </div>
       </div>
 
-      {/* 2. Minimum Withdraw Notice */}
-      <div className="glass-card rounded-2xl p-3 flex items-center justify-between text-xs font-mono transition-colors">
-        <div className="flex items-center gap-2 text-neutral-800 dark:text-neutral-300">
-          <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
-          <span>Instant UPI Transfer</span>
-        </div>
-        <span className="text-neutral-500 dark:text-neutral-400 font-semibold">Min. withdraw ₹{minWithdraw}</span>
-      </div>
-
-      {/* Payout History Button */}
-      <button
-        type="button"
-        onClick={() => {
-          triggerHaptic('light');
-          refetchPayoutHistory();
-          setShowPayoutHistoryModal(true);
-        }}
-        className="w-full glass-card rounded-2xl p-3.5 flex items-center justify-between border border-neutral-200 dark:border-white/5 hover:border-black/20 dark:hover:border-white/20 transition-all active:scale-[0.99] group"
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-200 dark:bg-white/10 text-neutral-900 dark:text-white group-hover:scale-105 transition-transform">
-            <History className="w-4 h-4" />
-          </div>
-          <div className="text-left">
-            <span className="text-xs font-bold text-neutral-900 dark:text-white block">
-              Payout History
-            </span>
-            <span className="text-[10px] text-neutral-500 dark:text-neutral-400">
-              View latest 10 withdrawals & transaction proofs
-            </span>
-          </div>
-        </div>
-        <span className="text-xs font-bold text-neutral-700 dark:text-neutral-300 flex items-center gap-1 group-hover:text-black dark:group-hover:text-white">
-          <span>View</span>
-          <ArrowUpRight className="w-3.5 h-3.5" />
-        </span>
-      </button>
-
-      {/* 3. Saved UPI ID Card */}
-      <div
-        onClick={() => {
-          triggerHaptic('light');
-          setNewUpiInput(user?.savedUpiId || upiId || '');
-          setShowEditUpiModal(true);
-        }}
-        className="glass-card rounded-2xl p-3.5 flex items-center justify-between border border-neutral-200 dark:border-white/5 hover:border-black/20 dark:hover:border-white/20 transition-all cursor-pointer active:scale-[0.99]"
-      >
-        <div className="flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-200 dark:bg-white/10 text-neutral-900 dark:text-white">
-            <CreditCard className="w-4 h-4" />
-          </div>
-          <div>
-            <span className="text-[10px] uppercase font-mono text-neutral-500 dark:text-neutral-400 block font-semibold">
-              Saved UPI ID
-            </span>
-            <span className="text-xs font-semibold text-neutral-900 dark:text-white font-mono">
-              {user?.savedUpiId || upiId ? (user?.savedUpiId || upiId) : 'No UPI ID saved'}
-            </span>
-          </div>
-        </div>
+      {/* 2. ACTION BUTTONS ROW (3 Square Cards matching reference image) */}
+      <div className="grid grid-cols-3 gap-2.5">
+        {/* Button 1: History */}
         <button
           type="button"
-          className="text-xs font-bold text-neutral-700 dark:text-neutral-300 hover:text-black dark:hover:text-white px-2.5 py-1 rounded-lg bg-neutral-100 dark:bg-white/5 border border-neutral-200 dark:border-white/10 flex items-center gap-1"
+          onClick={() => {
+            triggerHaptic('light');
+            refetchPayoutHistory();
+            setShowPayoutHistoryModal(true);
+          }}
+          className="glass-card rounded-2xl p-3.5 flex flex-col items-center justify-center text-center border border-neutral-200 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 active:scale-95 transition-all shadow-sm group"
         >
-          <Edit2 className="w-3 h-3" />
-          <span>{user?.savedUpiId || upiId ? 'Edit' : 'Add'}</span>
+          <div className="w-10 h-10 rounded-2xl bg-neutral-100 dark:bg-white/10 flex items-center justify-center text-neutral-900 dark:text-white mb-2 group-hover:scale-105 transition-transform">
+            <History className="w-5 h-5" />
+          </div>
+          <span className="text-xs font-bold text-neutral-900 dark:text-white">
+            History
+          </span>
+        </button>
+
+        {/* Button 2: Withdraw (Prominent Dark Button matching reference) */}
+        <button
+          type="button"
+          onClick={() => {
+            triggerHaptic('selection');
+            setShowWithdrawModal(true);
+          }}
+          className="rounded-2xl p-3.5 flex flex-col items-center justify-center text-center bg-black text-white dark:bg-white dark:text-black border border-black dark:border-white active:scale-95 transition-all shadow-md group"
+        >
+          <div className="w-10 h-10 rounded-2xl bg-white/20 dark:bg-black/10 flex items-center justify-center text-white dark:text-black mb-2 group-hover:scale-105 transition-transform">
+            <ArrowDownToLine className="w-5 h-5" />
+          </div>
+          <span className="text-xs font-black">
+            Withdraw
+          </span>
+        </button>
+
+        {/* Button 3: Payout UPI (Saved UPI) */}
+        <button
+          type="button"
+          onClick={() => {
+            triggerHaptic('light');
+            setNewUpiInput(user?.savedUpiId || upiId || '');
+            setShowEditUpiModal(true);
+          }}
+          className="glass-card rounded-2xl p-3.5 flex flex-col items-center justify-center text-center border border-neutral-200 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 active:scale-95 transition-all shadow-sm group"
+        >
+          <div className="w-10 h-10 rounded-2xl bg-neutral-100 dark:bg-white/10 flex items-center justify-center text-neutral-900 dark:text-white mb-2 group-hover:scale-105 transition-transform">
+            <CreditCard className="w-5 h-5" />
+          </div>
+          <span className="text-xs font-bold text-neutral-900 dark:text-white">
+            Payout UPI
+          </span>
         </button>
       </div>
 
-      {/* 4. VERIFIED PAYOUT PROOFS SECTION (Replaces Recent Activity) */}
-      <div className="glass-card rounded-3xl p-5 relative overflow-hidden transition-colors border border-emerald-500/20 shadow-lg">
-        {/* Glow Accent */}
-        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
-
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-500 flex items-center justify-center font-bold">
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-            <div>
-              <h3 className="text-sm font-black text-neutral-900 dark:text-white tracking-tight flex items-center gap-1.5">
-                <span>Verified Payout Proofs</span>
-                <span className="flex h-2 w-2 rounded-full bg-emerald-500" />
-              </h3>
-            </div>
-          </div>
-
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-            Public Channel
-          </span>
+      {/* 3. CONVERSION RATE & MINIMUM WITHDRAW PILL (1000 PTS = ₹1.00) */}
+      <div className="glass-card rounded-2xl p-3.5 flex items-center justify-between text-xs font-mono transition-colors">
+        <div className="flex items-center gap-2 text-neutral-800 dark:text-neutral-300">
+          <span className="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          <span className="font-semibold">1000 PTS = ₹1.00</span>
         </div>
-
-        <p className="text-xs text-neutral-600 dark:text-neutral-400 my-3 leading-relaxed">
-          Every single UPI payout sent to our players is published publicly on our official proof channel for complete transparency.
-        </p>
-
-        {/* Feature badges */}
-        <div className="grid grid-cols-2 gap-2 mb-4">
-          <div className="p-2.5 rounded-xl bg-neutral-100 dark:bg-white/[0.03] border border-neutral-200 dark:border-white/5 flex items-center gap-2">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-            <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200">Instant UPI Transfers</span>
-          </div>
-          <div className="p-2.5 rounded-xl bg-neutral-100 dark:bg-white/[0.03] border border-neutral-200 dark:border-white/5 flex items-center gap-2">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-            <span className="text-[11px] font-bold text-neutral-800 dark:text-neutral-200">Payment Screenshots</span>
-          </div>
-        </div>
-
-        {/* Payout Proof Channel Button */}
-        <a
-          href="https://t.me/FireflyPayouts"
-          target="_blank"
-          rel="noopener noreferrer"
-          onClick={() => triggerHaptic('medium')}
-          className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-emerald-500 via-teal-500 to-emerald-600 hover:brightness-110 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all text-center"
-        >
-          <ShieldCheck className="w-4 h-4 text-white" />
-          <span>Open Firefly Payout Proofs Channel</span>
-          <ExternalLink className="w-3.5 h-3.5 text-white/80" />
-        </a>
+        <span className="text-neutral-500 dark:text-neutral-400 font-semibold">
+          Min. withdraw ₹{minWithdraw}
+        </span>
       </div>
 
-      {/* WITHDRAW BOTTOM SHEET (Matching Reference Panel) */}
-      {showWithdrawModal && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/80 backdrop-blur-sm p-0 animate-fade-in">
-          <div className="w-full max-w-md rounded-t-[36px] bg-white dark:bg-[#121216] border-t border-x border-neutral-200 dark:border-white/10 p-5 pb-8 text-neutral-900 dark:text-white shadow-2xl relative transition-colors max-h-[90vh] overflow-y-auto">
-            {/* Sheet Handle */}
-            <div className="mx-auto mb-3 h-1.5 w-12 rounded-full bg-neutral-300 dark:bg-white/20" />
+      {/* 4. RECENT ACTIVITY SECTION (Matching Reference Image) */}
+      <div className="space-y-2.5">
+        <div className="flex items-center justify-between px-1">
+          <h3 className="text-base font-black text-neutral-900 dark:text-white tracking-tight">
+            Recent activity
+          </h3>
+          <button
+            type="button"
+            onClick={() => {
+              triggerHaptic('light');
+              refetchPayoutHistory();
+              setShowPayoutHistoryModal(true);
+            }}
+            className="text-xs font-semibold text-neutral-500 hover:text-black dark:hover:text-white flex items-center gap-0.5 transition-colors"
+          >
+            <span>See all</span>
+            <ChevronRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
 
-            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-white/5">
-              <h3 className="text-base font-black text-neutral-900 dark:text-white tracking-tight">Withdraw Funds</h3>
+        {/* Activity Items List */}
+        <div className="glass-card rounded-3xl p-2 divide-y divide-neutral-100 dark:divide-white/5 border border-neutral-200 dark:border-white/10">
+          {displayActivities.map((act) => {
+            const isServer = !!act.createdAt;
+            const title = isServer
+              ? act.description || (act.type === 'withdrawal' ? 'UPI Withdrawal' : 'Game Reward')
+              : act.title;
+            const time = isServer ? formatTimeAgo(act.createdAt) : act.time;
+            const amountText = isServer
+              ? act.type === 'withdrawal'
+                ? `-₹${Number(act.amount).toFixed(2)}`
+                : `+${formatPoints(act.amount)} PTS`
+              : act.amountText;
+            const isPositive = !amountText.startsWith('-');
+            const Icon = act.icon || (act.type === 'withdrawal' ? ArrowDownToLine : Gamepad2);
+
+            return (
+              <div
+                key={act._id}
+                className="flex items-center justify-between p-3 rounded-2xl hover:bg-neutral-50 dark:hover:bg-white/[0.02] transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-neutral-100 dark:bg-white/10 flex items-center justify-center text-neutral-700 dark:text-neutral-300 shrink-0">
+                    <Icon className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-neutral-900 dark:text-white leading-tight">
+                      {title}
+                    </h4>
+                    <span className="text-[11px] text-neutral-400 font-mono">
+                      {time}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <span
+                    className={`text-xs font-black font-mono ${
+                      isPositive ? 'text-emerald-500' : 'text-rose-500'
+                    }`}
+                  >
+                    {amountText}
+                  </span>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 5. VERIFIED PAYOUT PROOFS CARD (Matching Bottom of Reference Image) */}
+      <div
+        onClick={() => {
+          triggerHaptic('light');
+          if (window.Telegram?.WebApp?.openTelegramLink) {
+            window.Telegram.WebApp.openTelegramLink('https://t.me/FireflyPayouts');
+          } else {
+            window.open('https://t.me/FireflyPayouts', '_blank');
+          }
+        }}
+        className="glass-card rounded-2xl p-4 flex items-center justify-between border border-neutral-200 dark:border-white/10 hover:border-black/20 dark:hover:border-white/20 transition-all cursor-pointer active:scale-[0.99] shadow-sm group"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <CheckCircle2 className="w-5 h-5 stroke-[2.2]" />
+          </div>
+          <div className="text-left">
+            <span className="text-xs font-black text-neutral-900 dark:text-white block leading-tight">
+              Payout proofs
+            </span>
+            <span className="text-[11px] text-neutral-500 dark:text-neutral-400 font-normal">
+              Totals and the latest payouts
+            </span>
+          </div>
+        </div>
+
+        <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:text-black dark:group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+      </div>
+
+      {/* ================= MODALS ================= */}
+
+      {/* WITHDRAW MODAL */}
+      {showWithdrawModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4 animate-fade-in">
+          <div className="w-full max-w-md rounded-t-[36px] sm:rounded-3xl bg-white dark:bg-[#121216] border-t sm:border border-neutral-200 dark:border-white/10 p-6 pb-8 text-neutral-900 dark:text-white shadow-2xl relative">
+            <div className="flex items-center justify-between pb-2 border-b border-neutral-100 dark:border-white/5">
+              <div>
+                <h3 className="text-lg font-black tracking-tight">Withdraw to UPI</h3>
+                <p className="text-xs text-neutral-500 dark:text-neutral-400 mt-0.5">
+                  Enter your UPI ID and requested withdrawal amount.
+                </p>
+              </div>
+
               <button
                 onClick={() => setShowWithdrawModal(false)}
                 className="h-8 w-8 rounded-full flex items-center justify-center text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-white/10"
