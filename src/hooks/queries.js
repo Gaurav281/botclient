@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/authStore';
 export const queryKeys = {
   walletSummary: ['walletSummary'],
   payoutHistory: ['payoutHistory'],
+  recentActivities: ['recentActivities'],
   weeklyGraph: ['weeklyGraph'],
   tasks: ['tasks'],
   liveTicker: ['liveTicker'],
@@ -34,6 +35,16 @@ export function usePayoutHistoryQuery() {
   return useQuery({
     queryKey: queryKeys.payoutHistory,
     queryFn: () => api.getPayoutHistory(),
+    enabled: Boolean(user),
+    staleTime: 1000 * 15,
+  });
+}
+
+export function useRecentActivitiesQuery() {
+  const user = useAuthStore((s) => s.user);
+  return useQuery({
+    queryKey: queryKeys.recentActivities,
+    queryFn: () => api.getRecentActivities(),
     enabled: Boolean(user),
     staleTime: 1000 * 15,
   });

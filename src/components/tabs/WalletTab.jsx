@@ -8,6 +8,7 @@ import { sound } from '../../services/audio';
 import {
   useWalletSummaryQuery,
   usePayoutHistoryQuery,
+  useRecentActivitiesQuery,
   useWithdrawMutation,
 } from '../../hooks/queries';
 import {
@@ -27,6 +28,7 @@ import {
   History,
   AlertCircle,
   ExternalLink,
+  Trophy,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import AnimatedCountUp from '../common/AnimatedCountUp';
@@ -36,11 +38,13 @@ export default function WalletTab() {
   const { user, setUser, showToast, refreshUser } = useGame();
   const { data: walletSummary, isLoading } = useWalletSummaryQuery();
   const { data: payoutHistoryData, isLoading: loadingPayouts, refetch: refetchPayoutHistory } = usePayoutHistoryQuery();
+  const { data: recentActivitiesData, isLoading: loadingActivities, refetch: refetchRecentActivities } = useRecentActivitiesQuery();
   const withdrawMutation = useWithdrawMutation();
 
   const [showWithdrawModal, setShowWithdrawModal] = useState(false);
   const [showEditUpiModal, setShowEditUpiModal] = useState(false);
   const [showPayoutHistoryModal, setShowPayoutHistoryModal] = useState(false);
+  const [showRecentActivitiesModal, setShowRecentActivitiesModal] = useState(false);
   const [newUpiInput, setNewUpiInput] = useState('');
   const [savingUpi, setSavingUpi] = useState(false);
 
@@ -140,9 +144,15 @@ export default function WalletTab() {
     });
   };
 
-  // Recent activity list matching reference image
-  const serverTransactions = walletSummary?.recentTransactions || [];
-  const displayActivities = serverTransactions.length > 0 ? serverTransactions.slice(0, 5) : [
+  // 1-day recent activities list
+  const oneDayAgoMs = Date.now() - 24 * 60 * 60 * 1000;
+  const rawActivities = recentActivitiesData?.activities || walletSummary?.recentTransactions || [];
+  const oneDayActivities = rawActivities.filter((a) => {
+    if (!a.createdAt) return true;
+    return new Date(a.createdAt).getTime() >= oneDayAgoMs;
+  });
+
+  const displayActivities = rawActivities.length > 0 ? rawActivities.slice(0, 5) : [
     {
       _id: 'default-1',
       title: 'Asteroid Blaster',
@@ -153,7 +163,7 @@ export default function WalletTab() {
     },
     {
       _id: 'default-2',
-      title: 'Diamond Highway',
+      title: 'Mini Racing',
       time: 'Today',
       amountText: '+150 PTS',
       isPts: true,
@@ -176,6 +186,14 @@ export default function WalletTab() {
       icon: Gamepad2,
     },
   ];
+
+  const getActivityIcon = (type) => {
+    if (type === 'withdrawal') return ArrowDownToLine;
+    if (type === 'tournament_reward' || type === 'tournament_win') return Trophy;
+    if (type === 'daily_checkin' || type === 'daily_streak') return Sparkles;
+    if (type === 'task_reward') return CheckCircle2;
+    return Gamepad2;
+  };
 
   return (
     <div className="space-y-4 px-4 pb-28 pt-2">
@@ -299,8 +317,8 @@ export default function WalletTab() {
             type="button"
             onClick={() => {
               triggerHaptic('light');
-              refetchPayoutHistory();
-              setShowPayoutHistoryModal(true);
+              refetchRecentActivities();
+              setShowRecentActivitiesModal(true);
             }}
             className="text-xs font-semibold text-neutral-500 hover:text-black dark:hover:text-white flex items-center gap-0.5 transition-colors"
           >
@@ -323,7 +341,7 @@ export default function WalletTab() {
                 : `+${formatPoints(act.amount)} PTS`
               : act.amountText;
             const isPositive = !amountText.startsWith('-');
-            const Icon = act.icon || (act.type === 'withdrawal' ? ArrowDownToLine : Gamepad2);
+            const Icon = act.icon || getActivityIcon(act.type);
 
             return (
               <div
@@ -389,6 +407,102 @@ export default function WalletTab() {
       </div>
 
       {/* ================= MODALS ================= */}
+
+      {/* RECENT ACTIVITIES MODAL (LAST 1 DAY / 24 HOURS) */}
+      {showRecentActivitiesModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4 animate-fade-in">
+          <div className="w-full max-w-md rounded-t-[36px] sm:rounded-3xl bg-white dark:bg-[#121216] border-t sm:border border-neutral-200 dark:border-white/10 p-5 pb-8 text-neutral-900 dark:text-white shadow-2xl relative max-h-[85vh] flex flex-col">
+            <div className="flex items-center justify-between pb-3 border-b border-neutral-100 dark:border-white/5">
+              <div className="flex items-center gap-2.5">
+                <div className="h-9 w-9 rounded-2xl bg-neutral-100 dark:bg-white/10 flex items-center justify-center text-neutral-900 dark:text-white">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black">Recent Activity</h3>
+                  <span className="text-[11px] text-neutral-500 dark:text-neutral-400 font-mono">
+                    Last 24 Hours (1 Day)
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowRecentActivitiesModal(false)}
+                className="h-8 w-8 rounded-full flex items-center justify-center text-neutral-400 hover:text-black dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-white/10 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="overflow-y-auto space-y-2.5 my-3 pr-1 flex-1">
+              {loadingActivities && (
+                <div className="space-y-2">
+                  {[1, 2, 3, 4].map((n) => (
+                    <div key={n} className="h-16 rounded-2xl bg-neutral-100 dark:bg-white/5 animate-pulse" />
+                  ))}
+                </div>
+              )}
+
+              {!loadingActivities && oneDayActivities.length === 0 && (
+                <div className="text-center py-12 text-neutral-400">
+                  <Clock className="w-10 h-10 mx-auto text-neutral-300 dark:text-neutral-600 mb-2.5" />
+                  <p className="text-xs font-bold text-neutral-700 dark:text-neutral-300">
+                    No Activity in the Last 24 Hours
+                  </p>
+                  <p className="text-[11px] text-neutral-500 mt-1 max-w-[240px] mx-auto leading-relaxed">
+                    Play games in Arena or finish tasks to start earning PTS!
+                  </p>
+                </div>
+              )}
+
+              {oneDayActivities.map((act) => {
+                const Icon = getActivityIcon(act.type);
+                const isPositive = act.type !== 'withdrawal' && act.type !== 'tournament_entry';
+                const formattedAmt = act.type === 'withdrawal'
+                  ? `-₹${Number(act.amount).toFixed(2)}`
+                  : `${isPositive ? '+' : '-'}${formatPoints(act.amount)} PTS`;
+
+                return (
+                  <div
+                    key={act._id}
+                    className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-white/[0.03] border border-neutral-200 dark:border-white/5 flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-white dark:bg-white/10 border border-neutral-200 dark:border-white/10 flex items-center justify-center text-neutral-800 dark:text-neutral-200 shrink-0">
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-neutral-900 dark:text-white leading-tight">
+                          {act.description || (act.type === 'withdrawal' ? 'UPI Withdrawal' : 'Game Earning')}
+                        </h4>
+                        <span className="text-[10px] text-neutral-400 font-mono">
+                          {act.createdAt ? formatTimeAgo(act.createdAt) : 'Today'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-right">
+                      <span
+                        className={`text-xs font-black font-mono ${
+                          isPositive ? 'text-emerald-500' : 'text-rose-500'
+                        }`}
+                      >
+                        {formattedAmt}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              onClick={() => setShowRecentActivitiesModal(false)}
+              className="w-full py-3 rounded-2xl bg-neutral-100 dark:bg-white/10 hover:bg-neutral-200 dark:hover:bg-white/20 font-bold text-xs text-neutral-900 dark:text-white transition-all active:scale-95"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* WITHDRAW MODAL */}
       {showWithdrawModal && (
@@ -548,7 +662,7 @@ export default function WalletTab() {
                   <CreditCard className="w-10 h-10 mx-auto text-neutral-300 dark:text-neutral-600 mb-2" />
                   <p className="text-xs font-bold">No Payout Requests Yet</p>
                   <p className="text-[11px] text-neutral-500 mt-1">
-                    Convert PTS to withdrawable INR and withdraw directly to your UPI!
+                    Withdraw PTS directly to your UPI!
                   </p>
                 </div>
               )}
