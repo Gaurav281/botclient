@@ -167,6 +167,12 @@ export const GameProvider = ({ children }) => {
   const launchGame = useCallback((chosenDifficulty = 'normal', gameType = 'asteroid_blaster') => {
     if (!user) return;
 
+    // Check if player has unclaimed points from previous match (must watch ad first)
+    if (user.pendingGameReward && user.pendingGameReward.pts > 0) {
+      showToast(`Watch the ad to claim your ${user.pendingGameReward.pts} PTS before starting your next match!`, 'warning');
+      return;
+    }
+
     // Check boss pending lock (only blocks Asteroid Blaster)
     if (gameType === 'asteroid_blaster' && user.bossKillPendingClaim) {
       showToast('Watch ad to claim your 200 Boss Coins before starting next game!', 'warning');
@@ -262,6 +268,23 @@ export const GameProvider = ({ children }) => {
     }
   }, [activeTournament, activeGameType, difficulty, setUser, showToast]);
 
+  // Claim pending match reward after watching Adsgram ad
+  const claimPendingGameReward = useCallback(async () => {
+    try {
+      const res = await api.claimPendingGameReward();
+      if (res.success && res.user) {
+        setUser(res.user);
+        useAuthStore.getState().setUser(res.user);
+        showToast(`+${res.claimedPts} PTS claimed successfully!`, 'success');
+        return true;
+      }
+      return false;
+    } catch (err) {
+      showToast(err.message || 'Error claiming reward', 'error');
+      return false;
+    }
+  }, [setUser, showToast]);
+
   const navigate = useNavigate();
   const switchTab = useCallback((tab) => {
     triggerHaptic('selection');
@@ -330,6 +353,7 @@ export const GameProvider = ({ children }) => {
         launchGame,
         confirmStartGame,
         handleGameEnd,
+        claimPendingGameReward,
         refreshUser,
         showToast,
         toast,

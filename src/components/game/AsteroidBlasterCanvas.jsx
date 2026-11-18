@@ -1,13 +1,24 @@
 import React, { useRef, useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGame } from '../../context/GameContext';
 import { sound } from '../../services/audio';
 import { triggerHaptic } from '../../services/telegram';
-import { ChevronLeft, Volume2, VolumeX, Pause, Play, Maximize2, Minimize2 } from 'lucide-react';
+import { api } from '../../services/api';
+import { ChevronLeft, X, Volume2, VolumeX, Pause, Play, Maximize2, Minimize2 } from 'lucide-react';
 
 export default function AsteroidBlasterCanvas() {
   const canvasRef = useRef(null);
   const canvasContainerRef = useRef(null);
-  const { difficulty, handleGameEnd, setIsPlaying, theme, activeTournament } = useGame();
+  const navigate = useNavigate();
+  const {
+    difficulty,
+    handleGameEnd,
+    setIsPlaying,
+    theme,
+    activeTournament,
+    setActiveTournament,
+    showToast,
+  } = useGame();
 
   const [countdownNum, setCountdownNum] = useState(3);
   const [isCountingDown, setIsCountingDown] = useState(true);
@@ -27,6 +38,46 @@ export default function AsteroidBlasterCanvas() {
   });
 
   const gameStateRef = useRef(null);
+
+  // Exit Game: If tournament match, count attempt, submit score and return to tournaments category
+  const handleExit = useCallback(async () => {
+    triggerHaptic('medium');
+    const state = gameStateRef.current;
+    if (state) state.gameOver = true;
+
+    if (activeTournament) {
+      const finalScore = state ? Math.round(state.score) : 0;
+      const finalKills = state ? state.enemiesKilled : 0;
+
+      try {
+        await api.submitTournamentScore(activeTournament._id, finalScore);
+        showToast(`Attempt counted & Score: ${finalScore} submitted!`, 'success');
+      } catch (err) {
+        console.warn('Error submitting tournament score on quit:', err);
+      }
+
+      try {
+        await api.finishGame({
+          score: finalScore,
+          enemiesKilled: finalKills,
+          bossKilled: false,
+          difficulty,
+          isTournament: true,
+          gameType: 'asteroid_blaster',
+        });
+      } catch (fErr) {
+        console.warn('Error recording tournament finish on quit:', fErr);
+      }
+
+      setIsPlaying(false);
+      setActiveTournament(null);
+      sessionStorage.setItem('preferred_task_cat', 'tournaments');
+      navigate('/tasks');
+    } else {
+      setIsPlaying(false);
+      navigate('/arena/asteroid-blaster');
+    }
+  }, [activeTournament, difficulty, setIsPlaying, setActiveTournament, showToast, navigate]);
 
   // Toggle Sound
   const toggleSound = () => {
@@ -1187,13 +1238,11 @@ export default function AsteroidBlasterCanvas() {
       {/* 1. TOP HEADER (Matching Reference Images 1-5) */}
       <div className="w-full max-w-sm flex items-center justify-between py-1 px-1">
         <button
-          onClick={() => {
-            sound.playCountdownBeep(false);
-            setIsPlaying(false);
-          }}
-          className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-100 dark:bg-white/10 text-neutral-800 dark:text-white hover:bg-neutral-200 dark:hover:bg-white/20 transition-all active:scale-95"
+          onClick={handleExit}
+          className="flex h-9 w-9 items-center justify-center rounded-xl bg-neutral-100 dark:bg-white/10 text-neutral-800 dark:text-white hover:bg-neutral-200 dark:hover:bg-white/20 transition-all active:scale-95 shadow-sm"
+          aria-label="Exit Game"
         >
-          <ChevronLeft className="w-5 h-5" />
+          <X className="w-5 h-5 stroke-[2.5]" />
         </button>
 
         <h2 className="text-base font-black tracking-tight text-neutral-900 dark:text-white">

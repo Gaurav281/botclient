@@ -1,12 +1,23 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useGame } from '../../context/GameContext';
 import { triggerHaptic } from '../../services/telegram';
 import { sound } from '../../services/audio';
+import { api } from '../../services/api';
 import { Pause, Play, X, Heart, Shield, Gem } from 'lucide-react';
 
 export default function CarRunnerCanvas() {
   const canvasRef = useRef(null);
-  const { handleGameEnd, switchTab, isPlaying, setIsPlaying } = useGame();
+  const navigate = useNavigate();
+  const {
+    handleGameEnd,
+    switchTab,
+    isPlaying,
+    setIsPlaying,
+    activeTournament,
+    setActiveTournament,
+    showToast,
+  } = useGame();
   const [isPaused, setIsPaused] = useState(false);
   const [lives, setLives] = useState(3);
   const [diamonds, setDiamonds] = useState(0);
@@ -47,12 +58,45 @@ export default function CarRunnerCanvas() {
     setIsPaused((prev) => !prev);
   }, []);
 
-  // Exit Game
-  const handleExit = useCallback(() => {
+  // Exit Game: If in tournament, count attempt, submit score and navigate to tournaments
+  const handleExit = useCallback(async () => {
     triggerHaptic('medium');
-    setIsPlaying(false);
-    switchTab('arena');
-  }, [setIsPlaying, switchTab]);
+    const state = gameStateRef.current;
+    if (state) state.running = false;
+
+    if (activeTournament) {
+      const finalScore = Math.round(state?.score || 0);
+      const finalDiamonds = state?.diamonds || 0;
+
+      try {
+        await api.submitTournamentScore(activeTournament._id, finalScore);
+        showToast(`Attempt counted & Score: ${finalScore} submitted!`, 'success');
+      } catch (err) {
+        console.warn('Error submitting tournament score on quit:', err);
+      }
+
+      try {
+        await api.finishGame({
+          score: finalScore,
+          enemiesKilled: finalDiamonds,
+          bossKilled: false,
+          difficulty: 'normal',
+          isTournament: true,
+          gameType: 'car_runner',
+        });
+      } catch (fErr) {
+        console.warn('Error recording tournament finish on quit:', fErr);
+      }
+
+      setIsPlaying(false);
+      setActiveTournament(null);
+      sessionStorage.setItem('preferred_task_cat', 'tournaments');
+      navigate('/tasks');
+    } else {
+      setIsPlaying(false);
+      navigate('/arena/mini-racing');
+    }
+  }, [activeTournament, setIsPlaying, setActiveTournament, showToast, navigate]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -324,7 +368,7 @@ export default function CarRunnerCanvas() {
       for (let i = state.diamondsList.length - 1; i >= 0; i--) {
         const dia = state.diamondsList[i];
         dia.y += currentRoadSpeed * dt;
-        dia.rotation += dt * 3.5;
+        // Do not rotate diamonds per user requirement (kept stationary upright)
 
         // Collection detection
         const dx = Math.abs(state.playerX - dia.x);
@@ -391,27 +435,25 @@ export default function CarRunnerCanvas() {
       ctx.fillStyle = '#0a0a0f';
       ctx.fillRect(0, 0, width, height);
 
-      // Subtle side shoulders / curbs
-      ctx.fillStyle = '#14141d';
-      ctx.fillRect(0, 0, 14, height);
-      ctx.fillRect(width - 14, 0, 14, height);
+      // Smooth side road shoulders (replacing distracting blinking red/white curb hazard blocks)
+      ctx.fillStyle = '#111116';
+      ctx.fillRect(0, 0, 10, height);
+      ctx.fillRect(width - 10, 0, 10, height);
 
-      // Curb hazard lines
-      const hazardStep = 40;
-      for (let y = (state.roadOffset % hazardStep) - hazardStep; y < height; y += hazardStep) {
-        ctx.fillStyle = '#dc2626';
-        ctx.fillRect(0, y, 12, hazardStep / 2);
-        ctx.fillRect(width - 12, y, 12, hazardStep / 2);
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, y + hazardStep / 2, 12, hazardStep / 2);
-        ctx.fillRect(width - 12, y + hazardStep / 2, 12, hazardStep / 2);
-      }
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.14)';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(10, 0);
+      ctx.lineTo(10, height);
+      ctx.moveTo(width - 10, 0);
+      ctx.lineTo(width - 10, height);
+      ctx.stroke();
 
-      // 2. Draw Lane Dividers (Dashed glowing lines)
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-      ctx.lineWidth = 3.5;
-      ctx.setLineDash([28, 28]);
-      ctx.lineDashOffset = -state.roadOffset * 1.5;
+      // 2. Draw Lane Dividers (Dashed smooth lines matching 1:1 speed with road)
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.18)';
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([22, 28]);
+      ctx.lineDashOffset = -state.roadOffset;
 
       const laneWidth = width / 3;
       // Divider 1
@@ -427,43 +469,61 @@ export default function CarRunnerCanvas() {
       ctx.stroke();
       ctx.setLineDash([]); // Reset line dash
 
-      // 3. Draw Diamonds 💎
+      // 3. Draw Diamonds 💎 (Non-rotating upright light-blue crystal gem)
       state.diamondsList.forEach((dia) => {
         ctx.save();
         ctx.translate(dia.x, dia.y);
-        ctx.rotate(dia.rotation);
+        // Kept stationary upright (no rotation per user request)
 
-        // Outer glow
-        const glow = ctx.createRadialGradient(0, 0, 4, 0, 0, 22);
+        // Outer soft cyan glow
+        const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, 20);
         glow.addColorStop(0, 'rgba(56, 189, 248, 0.45)');
         glow.addColorStop(1, 'rgba(56, 189, 248, 0)');
         ctx.fillStyle = glow;
         ctx.beginPath();
-        ctx.arc(0, 0, 22, 0, Math.PI * 2);
+        ctx.arc(0, 0, 20, 0, Math.PI * 2);
         ctx.fill();
 
-        // Diamond Poly Shape
-        ctx.fillStyle = '#38bdf8';
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
+        // Faceted Diamond Geometry (Top Crown Flat, Lower Pavilion Point)
+        // Upper Table / Crown
+        ctx.fillStyle = '#bae6fd'; // Very light icy blue
         ctx.beginPath();
-        ctx.moveTo(0, -15);
-        ctx.lineTo(13, 0);
-        ctx.lineTo(0, 15);
-        ctx.lineTo(-13, 0);
+        ctx.moveTo(-6, -13);
+        ctx.lineTo(6, -13);
+        ctx.lineTo(13, -3);
+        ctx.lineTo(-13, -3);
         ctx.closePath();
         ctx.fill();
+
+        // Lower Pavilion (Triangle down to point)
+        ctx.fillStyle = '#38bdf8'; // Sky light blue
+        ctx.beginPath();
+        ctx.moveTo(-13, -3);
+        ctx.lineTo(13, -3);
+        ctx.lineTo(0, 14);
+        ctx.closePath();
+        ctx.fill();
+
+        // Center Facet
+        ctx.fillStyle = '#7dd3fc'; // Mid light blue
+        ctx.beginPath();
+        ctx.moveTo(-6, -13);
+        ctx.lineTo(6, -13);
+        ctx.lineTo(0, 14);
+        ctx.closePath();
+        ctx.fill();
+
+        // Outline & Edges
+        ctx.strokeStyle = '#e0f2fe';
+        ctx.lineWidth = 1.4;
+        ctx.beginPath();
+        ctx.moveTo(-6, -13);
+        ctx.lineTo(6, -13);
+        ctx.lineTo(13, -3);
+        ctx.lineTo(0, 14);
+        ctx.lineTo(-13, -3);
+        ctx.closePath();
         ctx.stroke();
-
-        // Inner Facet Highlight
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.moveTo(0, -15);
-        ctx.lineTo(6, 0);
-        ctx.lineTo(0, 7);
-        ctx.lineTo(-6, 0);
-        ctx.closePath();
-        ctx.fill();
 
         ctx.restore();
       });

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '../context/GameContext';
 import { sound } from '../services/audio';
 import { triggerHaptic } from '../services/telegram';
+import { showAdsgramRewardAd } from '../services/ads';
 import {
   Play,
   HelpCircle,
@@ -30,9 +31,11 @@ export default function AsteroidBlasterPage() {
     setDifficulty,
     openRules,
     setShowBossVictoryModal,
+    claimPendingGameReward,
   } = useGame();
 
   const [soundOn, setSoundOn] = useState(() => sound.enabled);
+  const [isClaiming, setIsClaiming] = useState(false);
 
   const toggleSound = () => {
     triggerHaptic('light');
@@ -49,6 +52,22 @@ export default function AsteroidBlasterPage() {
   const wonToday = user ? user.wonToday : 0;
   const highScore = user ? user.highScore : 0;
   const hasBossLock = user ? user.bossKillPendingClaim : false;
+  const pendingRewardPts = user?.pendingGameReward?.pts || 0;
+  const hasPendingReward = pendingRewardPts > 0;
+
+  const handleClaimReward = async () => {
+    triggerHaptic('medium');
+    setIsClaiming(true);
+    await showAdsgramRewardAd(async () => {
+      await claimPendingGameReward();
+      setIsClaiming(false);
+    }, {
+      badgeText: 'MATCH REWARD CLAIM',
+      title: 'Asteroid Blaster',
+      description: `Watch this clip to claim your ${pendingRewardPts} PTS!`,
+    });
+    setIsClaiming(false);
+  };
 
   const energy = user?.gameEnergy || { matchesRemaining: 50, lastResetAt: new Date() };
   const matchesRemaining = energy.matchesRemaining ?? 50;
@@ -69,9 +88,9 @@ export default function AsteroidBlasterPage() {
   const difficultySubtext = difficultyRewards[difficulty]?.sub || 'Fighters aim at you';
 
   return (
-    <div className="min-h-screen text-neutral-900 dark:text-white px-4 pt-3 pb-32 animate-fade-in relative">
+    <div className="h-full flex flex-col text-neutral-900 dark:text-white select-none relative animate-fade-in">
       {/* 1. TOP NAV BAR (Back <, Title, Sound, Help ?, Plays) */}
-      <div className="flex items-center justify-between mb-3.5">
+      <div className="px-4 pt-3 pb-2 shrink-0 flex items-center justify-between">
         <button
           onClick={() => {
             triggerHaptic('light');
@@ -113,8 +132,9 @@ export default function AsteroidBlasterPage() {
         </div>
       </div>
 
-      <div className="space-y-3.5">
-        {/* 2. HERO CARD (Always Permanent Dark Obsidian in both Light & Dark Theme matching reference) */}
+      {/* 2. SCROLLABLE CONTENT BODY */}
+      <div className="flex-1 overflow-y-auto px-4 py-2 space-y-3.5 overscroll-contain">
+        {/* HERO CARD (Always Permanent Dark Obsidian in both Light & Dark Theme matching reference) */}
         <div className="wallet-card-permanent-dark rounded-[28px] p-5 relative overflow-hidden flex items-center justify-between min-h-[140px] shadow-lg">
           <div className="absolute inset-0 bg-[radial-gradient(rgba(255,255,255,0.08)_1px,transparent_1px)] [background-size:12px_12px] pointer-events-none" />
 
@@ -131,7 +151,7 @@ export default function AsteroidBlasterPage() {
             </p>
           </div>
 
-          {/* Right Vector Graphic (Matching Reference Image 1 & 5) */}
+          {/* Right Vector Graphic */}
           <div className="relative w-28 h-28 shrink-0 flex items-center justify-center z-10">
             <svg className="w-full h-full" viewBox="0 0 100 100" fill="none">
               <circle cx="35" cy="26" r="14" stroke="rgba(255,255,255,0.22)" strokeWidth="1.5" strokeDasharray="3 3" />
@@ -143,7 +163,7 @@ export default function AsteroidBlasterPage() {
           </div>
         </div>
 
-        {/* 3. DIFFICULTY SELECTOR (Matching Reference Images 1 & 5) */}
+        {/* DIFFICULTY SELECTOR */}
         <div>
           <div className="rounded-[26px] bg-neutral-100 dark:bg-white/[0.05] p-1.5 border border-neutral-200 dark:border-white/10 grid grid-cols-3 gap-1.5 shadow-sm">
             {Object.entries(difficultyRewards).map(([key, item]) => {
@@ -176,7 +196,7 @@ export default function AsteroidBlasterPage() {
           </p>
         </div>
 
-        {/* 4. PAID PLAYS LEFT CARD (Matching Reference) */}
+        {/* PAID PLAYS LEFT CARD */}
         <div className="glass-card rounded-[26px] p-4 border border-neutral-200 dark:border-white/10 flex items-center justify-between shadow-sm">
           <div className="flex-1 pr-4">
             <div className="flex items-center gap-1.5 mb-1 text-[10px] uppercase font-mono font-bold text-neutral-400 tracking-wider">
@@ -216,7 +236,7 @@ export default function AsteroidBlasterPage() {
           </div>
         </div>
 
-        {/* 5. STATS CARDS (Your best & Won today - Side-by-side) */}
+        {/* STATS CARDS (Your best & Won today - Side-by-side) */}
         <div className="grid grid-cols-2 gap-2.5">
           <div className="glass-card rounded-[24px] p-4 border border-neutral-200 dark:border-white/10 flex flex-col justify-between shadow-sm">
             <div className="w-7 h-7 rounded-xl bg-neutral-100 dark:bg-white/10 flex items-center justify-center text-neutral-700 dark:text-neutral-300 mb-2">
@@ -247,7 +267,7 @@ export default function AsteroidBlasterPage() {
           </div>
         </div>
 
-        {/* 6. HOW TO PLAY CARD (Matching Reference Image 5) */}
+        {/* HOW TO PLAY CARD */}
         <div className="glass-card rounded-[26px] p-4 sm:p-5 border border-neutral-200 dark:border-white/10 space-y-3 shadow-sm">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-black text-neutral-900 dark:text-white">
@@ -289,37 +309,48 @@ export default function AsteroidBlasterPage() {
         </div>
       </div>
 
-      {/* 7. PERMANENTLY FIXED BOTTOM PLAY BUTTON (Visible at all times without scrolling!) */}
-      <div className="fixed bottom-0 inset-x-0 max-w-md mx-auto p-4 bg-white/90 dark:bg-[#070709]/90 backdrop-blur-xl border-t border-neutral-200/80 dark:border-white/10 z-40">
-        <button
-          onClick={() => {
-            triggerHaptic('medium');
-            launchGame(difficulty, 'asteroid_blaster');
-          }}
-          disabled={hasBossLock || matchesRemaining <= 0}
-          className={`w-full py-4 rounded-2xl text-xs font-black flex items-center justify-center gap-2 shadow-2xl transition-all ${
-            !hasBossLock && matchesRemaining > 0
-              ? 'bg-black text-white dark:bg-white dark:text-black hover:opacity-90 active:scale-95'
-              : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400 cursor-not-allowed'
-          }`}
-        >
-          {hasBossLock ? (
-            <>
-              <Lock className="w-4 h-4" />
-              <span>Claim Boss Reward to Play</span>
-            </>
-          ) : matchesRemaining <= 0 ? (
-            <>
-              <Clock className="w-4 h-4" />
-              <span>Match Limit Reached (Resets in {hoursLeft}h)</span>
-            </>
-          ) : (
-            <>
-              <Play className="w-4 h-4 fill-current" />
-              <span>Play · up to {currentReward} PTS</span>
-            </>
-          )}
-        </button>
+      {/* 3. PERMANENTLY FIXED BOTTOM PLAY / CLAIM BUTTON */}
+      <div className="p-4 bg-white/95 dark:bg-[#070709]/95 backdrop-blur-xl border-t border-neutral-200/80 dark:border-white/10 shrink-0 z-40">
+        {hasPendingReward ? (
+          <button
+            onClick={handleClaimReward}
+            disabled={isClaiming}
+            className="w-full py-4 rounded-2xl text-xs font-black flex items-center justify-center gap-2 shadow-2xl bg-gradient-to-r from-amber-500 to-yellow-500 text-black hover:opacity-95 active:scale-95 transition-all"
+          >
+            <Tv className="w-4 h-4 fill-current" />
+            <span>{isClaiming ? 'Claiming PTS...' : `Watch Ad · Claim ${pendingRewardPts} PTS`}</span>
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              triggerHaptic('medium');
+              launchGame(difficulty, 'asteroid_blaster');
+            }}
+            disabled={hasBossLock || matchesRemaining <= 0}
+            className={`w-full py-4 rounded-2xl text-xs font-black flex items-center justify-center gap-2 shadow-2xl transition-all ${
+              !hasBossLock && matchesRemaining > 0
+                ? 'bg-black text-white dark:bg-white dark:text-black hover:opacity-90 active:scale-95'
+                : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-400 cursor-not-allowed'
+            }`}
+          >
+            {hasBossLock ? (
+              <>
+                <Lock className="w-4 h-4" />
+                <span>Claim Boss Reward to Play</span>
+              </>
+            ) : matchesRemaining <= 0 ? (
+              <>
+                <Clock className="w-4 h-4" />
+                <span>Match Limit Reached (Resets in {hoursLeft}h)</span>
+              </>
+            ) : (
+              <>
+                <Play className="w-4 h-4 fill-current" />
+                <span>Play · up to {currentReward} PTS</span>
+              </>
+            )}
+          </button>
+        )}
       </div>
     </div>
   );

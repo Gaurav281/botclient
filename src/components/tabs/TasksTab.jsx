@@ -104,11 +104,19 @@ export default function TasksTab() {
 
     // Attempts 2 to 10 require watching an Adsgram ad
     if (userPart.attempts >= 1) {
-      showToast('Watch an ad to play your next tournament attempt!', 'info');
-      await showAdsgramRewardAd(async () => {
-        sound.playPowerup();
-        launchTournamentMatch(tournament);
-      });
+      showToast('Watch an ad to unlock your next tournament attempt!', 'info');
+      await showAdsgramRewardAd(
+        async () => {
+          sound.playPowerup();
+          showToast('Attempt unlocked! You can now play again.', 'success');
+          launchTournamentMatch(tournament);
+        },
+        {
+          badgeText: 'TOURNAMENT ATTEMPT UNLOCK',
+          title: tournament.title || 'Tournament Attempt',
+          description: `Watch this sponsor clip to unlock Attempt ${userPart.attempts + 1} of 10.`,
+        }
+      );
       return;
     }
 
@@ -294,7 +302,7 @@ export default function TasksTab() {
                         {tourney.gameType === 'car_runner' ? (
                           <>
                             <Car className="w-3 h-3 text-cyan-500" />
-                            <span>Diamond Highway</span>
+                            <span>Mini Racing</span>
                           </>
                         ) : (
                           <>

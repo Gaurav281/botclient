@@ -4,7 +4,7 @@
  * Show Rewarded Adsgram Ad to claim Boss Reward or complete Daily task
  * @param {Function} onRewardCallback - callback called when user finishes watching ad
  */
-export async function showAdsgramRewardAd(onRewardCallback) {
+export async function showAdsgramRewardAd(onRewardCallback, options = {}) {
   const blockId = import.meta.env.VITE_ADSGRAM_BLOCK_ID || 'int-0000';
 
   if (typeof window !== 'undefined' && window.Adsgram) {
@@ -27,19 +27,22 @@ export async function showAdsgramRewardAd(onRewardCallback) {
         onRewardCallback(true);
       }
       resolve(success);
-    });
+    }, options);
   });
 }
 
 /**
  * Interactive simulated rewarded video ad modal when outside Telegram or in dev mode
  */
-function simulateRewardAdVideo(callback) {
+function simulateRewardAdVideo(callback, options = {}) {
   const overlay = document.createElement('div');
   overlay.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4';
   overlay.id = 'ad-simulation-overlay';
 
-  let countdown = 5;
+  let countdown = 4;
+  const badgeText = options.badgeText || 'SPONSORED REWARD';
+  const title = options.title || 'Firefly Play Arena';
+  const description = options.description || 'Watch the sponsor clip to unlock your reward.';
 
   overlay.innerHTML = `
     <div class="relative w-full max-w-sm rounded-2xl bg-[#121216] border border-white/10 p-6 text-center text-white shadow-2xl animate-fade-in">
@@ -51,11 +54,11 @@ function simulateRewardAdVideo(callback) {
       </div>
 
       <div class="inline-block rounded-full bg-white/10 px-3 py-1 text-xs font-semibold tracking-wider text-green-400 mb-2">
-        ADSGRAM SPONSORED REWARD
+        ${badgeText}
       </div>
 
-      <h3 class="text-xl font-bold">Asteroid Defense Force</h3>
-      <p class="mt-2 text-xs text-neutral-400">Watch full sponsor clip to claim your 200 Boss Coins.</p>
+      <h3 class="text-xl font-bold">${title}</h3>
+      <p class="mt-2 text-xs text-neutral-400">${description}</p>
 
       <div class="my-6 rounded-xl bg-neutral-900/80 p-4 border border-white/5">
         <div class="h-2 w-full overflow-hidden rounded-full bg-neutral-800">

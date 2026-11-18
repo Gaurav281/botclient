@@ -183,7 +183,7 @@ export default function AdminTournamentsPage() {
                 }`}
               >
                 <Car className="w-4 h-4" />
-                <span>Diamond Highway (Car)</span>
+                <span>Mini Racing</span>
               </button>
             </div>
           </div>
@@ -363,7 +363,7 @@ export default function AdminTournamentsPage() {
                     </span>
                     <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-bold uppercase bg-white/10 text-neutral-300 border border-white/10 flex items-center gap-1">
                       {t.gameType === 'car_runner' ? <Car className="w-2.5 h-2.5" /> : <Rocket className="w-2.5 h-2.5" />}
-                      <span>{t.gameType === 'car_runner' ? 'Diamond Car' : 'Asteroid Blaster'}</span>
+                      <span>{t.gameType === 'car_runner' ? 'Mini Racing' : 'Asteroid Blaster'}</span>
                     </span>
                     <span className="text-[10px] text-neutral-400 font-mono">
                       Ends: {new Date(t.endDate).toLocaleString()}

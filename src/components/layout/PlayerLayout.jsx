@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation } from 'react-router-dom';
 import Header from './Header';
 import BottomNavbar from './BottomNavbar';
 import ProfileModal from '../common/ProfileModal';
@@ -10,15 +10,18 @@ import BossVictoryModal from '../game/BossVictoryModal';
 import Toast from '../common/Toast';
 
 export default function PlayerLayout() {
-  return (
-    <div className="min-h-screen app-dotted-bg text-neutral-900 dark:text-white flex flex-col max-w-md mx-auto relative shadow-2xl overflow-x-hidden transition-colors font-sans">
-      <Header />
+  const location = useLocation();
+  const isGameDetailPage = location.pathname.startsWith('/arena/') && location.pathname !== '/arena';
 
-      <main className="flex-1 overflow-y-auto">
+  return (
+    <div className="h-[100dvh] h-screen app-dotted-bg text-neutral-900 dark:text-white flex flex-col max-w-md mx-auto relative shadow-2xl overflow-hidden transition-colors font-sans">
+      {!isGameDetailPage && <Header />}
+
+      <main className={`flex-1 min-h-0 ${isGameDetailPage ? 'overflow-hidden flex flex-col' : 'overflow-y-auto'}`}>
         <Outlet />
       </main>
 
-      <BottomNavbar />
+      {!isGameDetailPage && <BottomNavbar />}
 
       {/* Global Modals */}
       <ProfileModal />

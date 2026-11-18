@@ -40,6 +40,7 @@ export const api = {
   startGame: (payload = {}) => request('/game/start', { method: 'POST', body: JSON.stringify(payload) }),
   finishGame: (data) => request('/game/finish', { method: 'POST', body: JSON.stringify(data) }),
   claimBossReward: () => request('/game/claim-boss-reward', { method: 'POST' }),
+  claimPendingGameReward: () => request('/game/claim-pending-reward', { method: 'POST' }),
   getLiveTicker: () => request('/game/live-ticker'),
 
   // Wallet
