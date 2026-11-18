@@ -13,6 +13,8 @@ import Toast from './components/common/Toast';
 const HomePage = React.lazy(() => import('./pages/HomePage'));
 const TasksPage = React.lazy(() => import('./pages/TasksPage'));
 const ArenaPage = React.lazy(() => import('./pages/ArenaPage'));
+const AsteroidBlasterPage = React.lazy(() => import('./pages/AsteroidBlasterPage'));
+const MiniRacingPage = React.lazy(() => import('./pages/MiniRacingPage'));
 const ReferPage = React.lazy(() => import('./pages/ReferPage'));
 const WalletPage = React.lazy(() => import('./pages/WalletPage'));
 
@@ -67,6 +69,8 @@ export default function App() {
           <Route path="/home" element={<HomePage />} />
           <Route path="/tasks" element={<TasksPage />} />
           <Route path="/arena" element={<ArenaPage />} />
+          <Route path="/arena/asteroid-blaster" element={<AsteroidBlasterPage />} />
+          <Route path="/arena/mini-racing" element={<MiniRacingPage />} />
           <Route path="/refers" element={<ReferPage />} />
           <Route path="/wallet" element={<WalletPage />} />
         </Route>

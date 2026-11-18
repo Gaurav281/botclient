@@ -22,6 +22,7 @@ export const GameProvider = ({ children }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [difficulty, setDifficulty] = useState('normal'); // 'easy', 'normal', 'hard'
   const [activeGameType, setActiveGameType] = useState('asteroid_blaster'); // 'asteroid_blaster' | 'car_runner'
+  const [rulesGameType, setRulesGameType] = useState('asteroid_blaster');
   const [showRulesModal, setShowRulesModal] = useState(false);
   const [showGameOverModal, setShowGameOverModal] = useState(false);
   const [showBossVictoryModal, setShowBossVictoryModal] = useState(false);
@@ -306,6 +307,12 @@ export const GameProvider = ({ children }) => {
         setDifficulty,
         showRulesModal,
         setShowRulesModal,
+        rulesGameType,
+        setRulesGameType,
+        openRules: (type) => {
+          if (type) setRulesGameType(type);
+          setShowRulesModal(true);
+        },
         showGameOverModal,
         setShowGameOverModal,
         showBossVictoryModal,

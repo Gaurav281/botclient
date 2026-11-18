@@ -19,8 +19,11 @@ export default function BottomNavbar() {
   ).length;
   const totalAvailableTasks = activeTournamentsCount + pendingAppTasksCount;
 
-  // Hide bottom navbar if inside admin routes
-  if (location.pathname.startsWith('/admin')) {
+  // Hide bottom navbar if inside admin routes or dedicated game details pages
+  if (
+    location.pathname.startsWith('/admin') ||
+    (location.pathname.startsWith('/arena/') && location.pathname !== '/arena')
+  ) {
     return null;
   }
 

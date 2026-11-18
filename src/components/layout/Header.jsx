@@ -21,12 +21,17 @@ export default function Header() {
   const tabTitles = {
     home: null, // Shows profile avatar & greeting
     tasks: { title: 'Tasks', sub: 'Complete missions & earn PTS' },
-    arena: { title: 'Arena', sub: 'Asteroid Blaster mission center' },
+    arena: { title: 'Arena', sub: 'Play action games, three difficulties each. Harder levels pay more.' },
     refer: { title: 'Refers', sub: 'Invite friends & earn 2% lifetime' },
     wallet: { title: 'Wallet', sub: 'Points, value & UPI withdrawals' },
   };
 
   const path = location.pathname;
+
+  // Hide global header on game details sub-routes because game page has its own top navigation bar
+  if (path.startsWith('/arena/') && path !== '/arena') {
+    return null;
+  }
   const isHome = path === '/home' || path === '/' || path === '';
   const currentKey = path.includes('tasks')
     ? 'tasks'
